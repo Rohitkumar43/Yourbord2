@@ -12,13 +12,26 @@ app.use(express.json());
 
 
 app.post('/signup' , async (req , res  ) => {
+    //console.log("Received request body:", req.body);
     const parseData = CreateUserSchema.safeParse(req.body);
-    if(!parseData.success){
+    console.log("Validation result:", parseData.success);
+    
+    if (!parseData.success) {
+        console.log("Validation errors:", parseData.error.errors);
         res.status(400).json({
-            message: parseData.error.message
-        })
+            message: parseData.error.errors.map(err => ({
+                field: err.path.join('.'),
+                message: err.message
+            }))
+        });
         return;
-    } 
+    }
+    // if(!parseData.success){
+    //     res.status(400).json({
+    //         message: parseData.error.message
+    //     })
+    //     return;
+    // } 
     // now we will create the room 
     try {
         const user = await prismaClient.user.create({
@@ -29,11 +42,12 @@ app.post('/signup' , async (req , res  ) => {
             }
         })
         // connect the DB
-        console.log("working ")
+        console.log("User created successfully:", user.id);
         res.json({
-            userId: user.id 
+            userId: user.id
         })
     } catch (error) {
+        console.log("Error creating user:", error);
         res.status(411).json({
             message: "User is already registered with this email"
         })
@@ -42,7 +56,9 @@ app.post('/signup' , async (req , res  ) => {
 
 app.post("/signin", async (req, res) => {
     const parsedData = signInSchema.safeParse(req.body);
+    console.log("Validation result:", parsedData.success);
     if (!parsedData.success) {
+        console.log("Validation errors:", parsedData.error.errors);
         res.json({
             message: "Incorrect inputs"
         })
@@ -63,10 +79,12 @@ app.post("/signin", async (req, res) => {
         })
         return;
     }
+    console.log("User found:", user.id);
 
     const token = jwt.sign({
         userId: user?.id
     }, JWT_SECRET);
+    console.log("User signed in successfully:", user.id);
 
     res.json({
         token
