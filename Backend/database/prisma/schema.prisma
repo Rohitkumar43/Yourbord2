@@ -1,0 +1,38 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id       Int           @id @default(autoincrement())
+  email    String        @unique
+  password String
+  name     String
+  // Add opposite relations
+  rooms    Room[]        @relation("RoomAdmin")
+  chats    ChatHistory[] @relation("UserChats")
+}
+
+model Room {
+  id        Int            @id @default(autoincrement())
+  slug      String         @unique
+  createdAt DateTime       @default(now())
+  adminId   Int            // Changed to Int to match User.id
+  admin     User           @relation("RoomAdmin", fields: [adminId], references: [id])
+  chats     ChatHistory[]
+}
+
+model ChatHistory {
+  id        Int      @id @default(autoincrement())
+  message   String
+  roomId    Int      
+  userId    Int      // Changed to Int to match User.id
+  createdAt DateTime @default(now())  // Added default(now())
+  rooms     Room     @relation(fields: [roomId], references: [id])
+  user      User     @relation("UserChats", fields: [userId], references: [id])
+}
