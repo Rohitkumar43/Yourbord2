@@ -132,6 +132,7 @@ interface ChatMessage {
 const users: User[] = [];
 
 function checkUserAuth(token: string): JwtPayload | null {
+  // check the user is authenticated or not to join the socket connection via token
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (!decoded || typeof (decoded as JwtPayload).userId === 'undefined') {
@@ -153,7 +154,7 @@ wss.on('connection', async function connection(ws: WebSocket, request: IncomingM
       ws.close();
       return;
     }
-
+// from that url it take the name of the token and then it will check the user is authenticated or not
     const queryParams = new URLSearchParams(url.split('?')[1]);
     const token = queryParams.get("token");
     
