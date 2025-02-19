@@ -77,7 +77,11 @@ export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , s
                 existingShapes.push(shape);;
                 // use the socket to send the data to the backend
 
-                socket.send(JSON.stringify({shape}));
+                socket.send(JSON.stringify({
+                    type: 'chat',
+                    message: JSON.stringify(shape),
+                    roomId
+                }));
 
              });
 
@@ -123,12 +127,12 @@ export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , s
 export async function getExistingShapes(roomId: string) {
     try {
         const response = await axios.get(`${BACKEND_URL}/chats/${roomId}`);
-        const data = response.data.messages;
+        const messages = response.data.messages;
 
         // Map over the data and return the shapes
         const shapes = messages.map((x : {message: string}) => {
             const messageData = JSON.parse(x.message);
-            return messageData;
+            return messageData.shape;
 
         });
 

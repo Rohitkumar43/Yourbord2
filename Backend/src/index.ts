@@ -3,12 +3,14 @@ import jwt from "jsonwebtoken";
 import { middleware } from "./middleware";
 import { CreateUserSchema , RoomNameSchema , signInSchema } from "../schema-types/index";
 import {prismaClient} from "../database/src/index";
+import cors from "cors";
 
 
 const JWT_SECRET = process.env.JWT_SECRET ?? "121212"; // Secret key for JWT
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 
 app.post('/signup' , async (req , res  ) => {
@@ -124,6 +126,7 @@ app.post("/room", middleware, async (req, res) => {
 app.get("/chats/:roomId", async (req, res) => {
     try {
         const roomId = Number(req.params.roomId);
+        console.log("Erroor for the room id " , roomId);
         console.log(req.params.roomId);
         const messages = await prismaClient.chatHistory.findMany({
             where: {
@@ -161,4 +164,4 @@ app.get("/room/:slug" , async (req , res) => {
 
 
 
-app.listen(3000);
+app.listen(3001);

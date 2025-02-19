@@ -1,11 +1,13 @@
 
 
 import { drawintial } from '@/drawElement';
+import { Socket } from 'net';
 import React, { useEffect, useRef } from 'react'
 
-function Canvas({roomId}: 
+export function Canvas({roomId , socket}: 
     {
         roomId: string
+        socket: WebSocket
     }) {
     // for using canvas we have to take the ref of the canvas using the userRef hook
 
@@ -17,7 +19,7 @@ function Canvas({roomId}:
         useEffect(() => {
             if (Canvasref.current) {
                 //const canvas =  Canvasref.current;
-                drawintial(Canvasref.current , roomId);
+                drawintial(Canvasref.current , roomId , socket);
             }
         } , [Canvasref]);
     
