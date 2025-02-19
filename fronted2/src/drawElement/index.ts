@@ -1,6 +1,7 @@
 
 import axios from "axios";
 import { BACKEND_URL } from "../../config";
+import { Socket } from "dgram";
 
 
 
@@ -18,12 +19,26 @@ type Shape =  {
     radius: number;
 } 
 
-export async function  drawintial(canvas: HTMLCanvasElement , roomId: string) {
+export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , socket : WebSocket) {
     const ctx  = canvas.getContext('2d'); 
 
             if (!ctx) {
                 return;
             }
+
+
+            // connect it with the socket
+            socket.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+
+                if(message.type === 'chat'){
+                    const parseData = JSON.parse(message.message);
+                    existingShapes.push(parseData);
+                    clearContext(canvas, ctx, existingShapes);
+                }
+
+            }
+
 
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -52,13 +67,18 @@ export async function  drawintial(canvas: HTMLCanvasElement , roomId: string) {
                 // get the existing shape
                 const height = event.clientY - startY;
                 const width = event.clientX - startX;
-                existingShapes.push({
+                const shape : Shape = {
                     type: 'rect',
                     x: startX,
                     y: startY,
                     width,
                     height
-                });
+                }
+                existingShapes.push(shape);;
+                // use the socket to send the data to the backend
+
+                socket.send(JSON.stringify({shape}));
+
              });
 
              canvas.addEventListener("mousemove" , (event) => {
