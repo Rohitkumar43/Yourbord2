@@ -1,7 +1,6 @@
 
 import axios from "axios";
 import { BACKEND_URL } from "../../config";
-import { Socket } from "dgram";
 
 
 
@@ -21,6 +20,12 @@ type Shape =  {
 
 export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , socket : WebSocket) {
     const ctx  = canvas.getContext('2d'); 
+
+
+    if (!roomId) {
+        console.error("Room ID is undefined");
+        return;
+    }
 
             if (!ctx) {
                 return;
@@ -44,7 +49,7 @@ export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , s
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // take all the shape in the array
-            let existingShapes: Shape[] =await getExistingShapes(roomId);
+            let existingShapes: Shape[] =(await getExistingShapes(roomId)) || [];
 
             // when element get cliecked then it will move
             clearContext(canvas, ctx, existingShapes);
@@ -129,6 +134,8 @@ export async function getExistingShapes(roomId: string) {
         const response = await axios.get(`${BACKEND_URL}/chats/${roomId}`);
         const messages = response.data.messages;
 
+        if(!messages) return [];
+
         // Map over the data and return the shapes
         const shapes = messages.map((x : {message: string}) => {
             const messageData = JSON.parse(x.message);
@@ -140,7 +147,7 @@ export async function getExistingShapes(roomId: string) {
         
     } catch (error) {
         console.log('Error fetching existing shapes:', error);
-        return null;
+        return [];
     }
 }
 

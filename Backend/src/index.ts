@@ -4,8 +4,17 @@ import { middleware } from "./middleware";
 import { CreateUserSchema , RoomNameSchema , signInSchema } from "../schema-types/index";
 import {prismaClient} from "../database/src/index";
 import cors from "cors";
-interface ChatParams {
-    roomId: string;
+import { RequestHandler } from 'express';
+import { error } from "console";
+// interface ChatParams {
+//     roomId: string;
+// }
+
+
+interface SignupBody {
+    username: string;
+    password: string;
+    name: string;
 }
 
 const JWT_SECRET = process.env.JWT_SECRET ?? "121212"; // Secret key for JWT
@@ -15,13 +24,12 @@ app.use(express.json());
 app.use(cors());
 
 
-app.post('/signup' , async (req , res  ) => {
-    //console.log("Received request body:", req.body);
+
+
+const signupHandler: RequestHandler<{}, any, SignupBody> = async (req, res) => {
     const parseData = CreateUserSchema.safeParse(req.body);
-    console.log("Validation result:", parseData.success);
     
     if (!parseData.success) {
-        console.log("Validation errors:", parseData.error.errors);
         res.status(400).json({
             message: parseData.error.errors.map(err => ({
                 field: err.path.join('.'),
@@ -41,22 +49,19 @@ app.post('/signup' , async (req , res  ) => {
         const user = await prismaClient.user.create({
             data: {
                 email: parseData.data?.username,
-                password : parseData.data.password,
+                password: parseData.data.password,
                 name: parseData.data.name
             }
-        })
-        // connect the DB
-        console.log("User created successfully:", user.id);
-        return res.json({
-            userId: user.id
-        })
+        });
+        res.json({ userId: user.id });
     } catch (error) {
-        console.log("Error creating user:", error);
-        return res.status(411).json({
+        res.status(411).json({
             message: "User is already registered with this email"
-        })
+        });
     }
-});
+};
+
+app.post('/signup', signupHandler);
 
 app.post("/signin", async (req, res) => {
     const parsedData = signInSchema.safeParse(req.body);
@@ -97,6 +102,7 @@ app.post("/signin", async (req, res) => {
 
 app.post("/room", middleware, async (req, res) => {
     const parsedData = RoomNameSchema.safeParse(req.body);
+    console.log(parsedData , error);
     if (!parsedData.success) {
         res.json({
             message: "Incorrect inputs"
@@ -114,9 +120,10 @@ app.post("/room", middleware, async (req, res) => {
             }
         })
 
-        res.json({
+        const data2 = res.json({
             roomId: room.id
         })
+        console.log("Room is created" , data2)
     } catch(e) {
         res.status(411).json({
             message: "Room already exists with this name"
@@ -125,56 +132,56 @@ app.post("/room", middleware, async (req, res) => {
 });
 
 
-// app.get("/chats/:roomId", async (req, res) => {
-//     try {
-//         const roomId = Number(req.params.roomId);
-//         console.log("Erroor for the room id " , roomId);
-//         console.log(req.params.roomId);
-//         const messages = await prismaClient.chatHistory.findMany({
-//             where: {
-//                 roomId: roomId
-//             },
-//             orderBy: {
-//                 id: "desc"
-//             },
-//             take: 1000
-//         });
-
-//         res.json({
-//             messages
-//         })
-//     } catch(e) {
-//         console.log(e);
-//         res.json({
-//             messages: []
-//         })
-//     }
-    
-// });
-
-
 app.get("/chats/:roomId", async (req, res) => {
     try {
-        const roomId = Number(req.params.roomId);  // Ensure roomId is an integer
-
-        if (isNaN(roomId)) {
-            return res.status(400).json({ error: "Invalid roomId" });
-        }
-
-        console.log("Fetching messages for room id:", roomId);
-
+        const roomId = Number(req.params.roomId);
+        console.log("Erroor for the room id " , roomId);
+        console.log(req.params.roomId);
         const messages = await prismaClient.chatHistory.findMany({
-            where: { roomId },
-            orderBy: { id: "desc" },
+            where: {
+                roomId: roomId
+            },
+            orderBy: {
+                id: "desc"
+            },
             take: 1000
         });
 
-        res.json({ messages });
-    } catch (e) {
-        console.error("Error fetching messages:", e);
-        res.status(500).json({ error: "Internal server error" });
+        res.json({
+            messages
+        })
+    } catch(e) {
+        console.log(e);
+        res.json({
+            messages: []
+        })
     }
+    
 });
+
+
+// app.get("/chats/:roomId", async (req, res) => {
+//     try {
+//         const roomId = Number(req.params.roomId);  // Ensure roomId is an integer
+
+//         if (isNaN(roomId)) {
+//             return res.status(400).json({ error: "Invalid roomId" });
+//         }
+
+//         console.log("Fetching messages for room id:", roomId);
+
+//         const messages = await prismaClient.chatHistory.findMany({
+//             where: { roomId },
+//             orderBy: { id: "desc" },
+//             take: 1000
+//         });
+
+//         res.json({ messages });
+//     } catch (e) {
+//         console.error("Error fetching messages:", e);
+//         res.status(500).json({ error: "Internal server error" });
+//     }
+// });
 
 
 
@@ -192,4 +199,4 @@ app.get("/room/:slug" , async (req , res) => {
 
 
 
-app.listen(3001);
+app.listen(3002);

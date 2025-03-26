@@ -1,7 +1,6 @@
 
 
 import { drawintial } from '@/drawElement';
-import { Socket } from 'net';
 import React, { useEffect, useRef } from 'react'
 
 export function Canvas({roomId , socket}: 

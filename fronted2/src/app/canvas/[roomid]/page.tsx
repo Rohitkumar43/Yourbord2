@@ -10,7 +10,7 @@ export default async function canvasPage({params}: {
   console.log(roomId);
 
 
-  return <RoomCanvas roomId={roomId}/>
+  return <RoomCanvas roomId={params.roomId}/>
   
  
 }
