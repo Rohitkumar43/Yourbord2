@@ -82,3 +82,4 @@ lerna-debug.log*
 # Misc
 .DS_Store
 Thumbs.db
+.qodo
