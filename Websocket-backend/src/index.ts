@@ -1,6 +1,3 @@
-
-
-
 import { IncomingMessage } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import jwt, { JwtPayload } from "jsonwebtoken";
@@ -217,10 +214,6 @@ wss.on('connection', async function connection(ws: WebSocket, request: IncomingM
         ws.send(JSON.stringify({ error: "Failed to process message" }));
       }
     });
-    
-    
-    
-    
     
     ws.on('close', () => {
       const index = users.findIndex(u => u.ws === ws);
