@@ -22,6 +22,7 @@ const JWT_SECRET = process.env.JWT_SECRET ?? "121212"; // Secret key for JWT
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 
@@ -110,10 +111,13 @@ interface SignInRequestBody {
 
 
 const signupHandler: RequestHandler<{}, any, SignupBody> = async (req, res) => {
+    console.log("Received signup request with body:", req.body); // Log request body
+
     const parseData = CreateUserSchema.safeParse(req.body);
     
     if (!parseData.success) {
-            res.status(400).json({
+        console.log("Validation failed:", parseData.error.errors); // Log validation errors
+        res.status(400).json({
             message: parseData.error.errors.map(err => ({
                 field: err.path.join('.'),
                 message: err.message
@@ -123,21 +127,27 @@ const signupHandler: RequestHandler<{}, any, SignupBody> = async (req, res) => {
     }
 
     try {
+        console.log("Validation successful, checking if username exists...");
+
         // Check if username already exists
         const existingUser = await prismaClient.user.findUnique({
             where: { username: parseData.data.username } // Ensure 'username' is unique in the schema
         });
 
         if (existingUser) {
+            console.log("Username already exists:", parseData.data.username);
             res.status(409).json({
                 message: "Username already exists"
             });
             return;
         }
 
+        console.log("Username is available, hashing password...");
         // Hash the password
         const hashedPassword = await bcrypt.hash(parseData.data.password, 10);
+        console.log("Password hashed successfully.");
 
+        console.log("Creating user in database...");
         const user = await prismaClient.user.create({
             data: {
                 username: parseData.data.username,
@@ -146,6 +156,7 @@ const signupHandler: RequestHandler<{}, any, SignupBody> = async (req, res) => {
             }
         });
 
+        console.log("User created successfully with ID:", user.id);
         res.status(201).json({ userId: user.id });
     } catch (error) {
         console.error("Signup error:", error);
@@ -155,11 +166,12 @@ const signupHandler: RequestHandler<{}, any, SignupBody> = async (req, res) => {
     }
 };
 
+
 app.post('/signup', signupHandler);
 
 // app.post("/signin", async (req: Request<{}, {} , SignInRequestBody>, res: Response , next: NextFunction) => {
 
-    const signInHandler: RequestHandler<{}, any, SignInRequestBody> = async (req, res) => {    
+    const signInHandler: RequestHandler<{}, any, SignInRequestBody> = async (req, res): Promise<void> => {    
 
     const parsedData = signInSchema.safeParse(req.body);
     
@@ -177,9 +189,10 @@ app.post('/signup', signupHandler);
         });
 
         if (!user) {
-            return res.status(401).json({
+            res.status(401).json({
                 message: "Invalid username or password"
             });
+            return;
         }
 
         // Compare passwords using bcrypt
@@ -189,9 +202,10 @@ app.post('/signup', signupHandler);
         );
 
         if (!isPasswordValid) {
-            return res.status(401).json({
+            res.status(401).json({
                 message: "Invalid username or password"
             });
+            return;
         }
 
         const token = jwt.sign(

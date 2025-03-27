@@ -6,15 +6,12 @@ export const CreateUserSchema = z.object({
   }),
   name: z.string().min(2).max(50),
   password: z.string()
-    .min(8, { message: "Password must be at least 8 characters long" })
-    .regex(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/, {
-      message: "Password must include at least one letter, one number, and one special character"
-    })
+    .min(6, { message: "Password must be at least 8 characters long" })
 });
 
 export const signInSchema = z.object({
   username: z.string().min(3).max(20),
-  password: z.string().min(8)
+  password: z.string().min(6)
 });
 
 export const RoomNameSchema = z.object({
