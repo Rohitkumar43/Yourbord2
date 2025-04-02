@@ -15,7 +15,10 @@ export default function Home() {
               <Github className="w-6 h-6" />
             </a>
             <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
-              Try Now
+             SignUp
+            </button>
+            <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+              SignIn
             </button>
           </div>
         </div>
@@ -33,7 +36,7 @@ export default function Home() {
               </span>
             </div>
             <h1 className="text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              Whiteboard collaboration
+              Yourboard collaboration
               <span className="text-primary-600"> made simple</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8">

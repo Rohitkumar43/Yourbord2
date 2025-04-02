@@ -106,7 +106,7 @@ export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , s
 
         }
 
-        // fxn for the clear the cntext and the shape 
+        // fxn for the clear the context and the shape 
 
 
         function clearContext(canvas: HTMLCanvasElement , ctx: CanvasRenderingContext2D , existingShapes: Shape[]) {
@@ -129,6 +129,8 @@ export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , s
 
         // fteching the data from the backend i.e the existing shape
 
+
+        // the shape we will get which is draw pahle se 
 export async function getExistingShapes(roomId: string) {
     try {
         const response = await axios.get(`${BACKEND_URL}/chats/${roomId}`);

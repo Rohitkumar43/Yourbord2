@@ -2,6 +2,7 @@
 import RoomCanvas from '@/components/RoomCanvas';
 export default async function canvasPage({params}: {
   params: {
+    // this param stored the room  id 
     roomId: string;
   };
 }) {

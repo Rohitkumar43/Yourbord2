@@ -34,11 +34,19 @@ function checkUserAuth(token: string): JwtPayload | null {
   }
 }
 
+// Add connection tracking
+console.log('WebSocket server started on port 8080');
+let connectionCount = 0;
+
 wss.on('connection', async function connection(ws: WebSocket, request: IncomingMessage) {
+  connectionCount++;
+  console.log(`New connection established. Total connections: ${connectionCount}`);
+  
   try {
     // Get token from URL
     const url = request.url;
     if (!url) {
+      console.log('Connection rejected: No URL provided');
       ws.send(JSON.stringify({ error: "No URL provided" }));
       ws.close();
       return;
@@ -48,6 +56,7 @@ wss.on('connection', async function connection(ws: WebSocket, request: IncomingM
     const token = queryParams.get("token");
     
     if (!token) {
+      console.log('Connection rejected: No token provided');
       ws.send(JSON.stringify({ error: "No token provided" }));
       ws.close();
       return;
@@ -55,6 +64,7 @@ wss.on('connection', async function connection(ws: WebSocket, request: IncomingM
 
     const userAuth = checkUserAuth(token);
     if (!userAuth) {
+      console.log('Connection rejected: Authentication failed');
       ws.send(JSON.stringify({ error: "Authentication failed" }));
       ws.close();
       return;
@@ -62,104 +72,31 @@ wss.on('connection', async function connection(ws: WebSocket, request: IncomingM
 
     // Add user to users array
     const userId = parseInt(userAuth.userId);
+    console.log(`User ${userId} authenticated successfully`);
+    
     users.push({
       userId,
       ws,
       rooms: []
     });
 
-    // 
-    
-    //   try {
-
-    //     let parsedData = JSON.parse(data.toString()) as ChatMessage;
-    //     const user = users.find(x => x.ws === ws);
-        
-
-    //     if(typeof parsedData !== "string"){
-    //       parsedData = JSON.parse(data.toString());
-        
-    //     } else {
-    //       parsedData = JSON.parse(data);
-    //     }
-    //     if (!user) {
-    //       ws.send(JSON.stringify({ error: "User not found" }));
-    //       return;
-    //     }
-
-    //     switch (parsedData.type) {
-    //       case 'join_room':
-    //         user.rooms.push(parsedData.roomId);
-    //         ws.send(JSON.stringify({
-    //           type: 'system',
-    //           message: `Joined room ${parsedData.roomId}`
-    //         }));
-    //         break;
-
-    //       case 'leave_room':
-    //         user.rooms = user.rooms.filter(x => x !== parsedData.roomId);
-    //         ws.send(JSON.stringify({
-    //           type: 'system',
-    //           message: `Left room ${parsedData.roomId}`
-    //         }));
-    //         break;
-
-    //       case 'chat':
-    //         if (!parsedData.message) {
-    //           ws.send(JSON.stringify({ error: "No message provided" }));
-    //           return;
-    //         }
-
-    //         // Save message to database
-    //         const savedMessage = await prismaClient.chatHistory.create({
-    //           data: {
-    //             message: parsedData.message,
-    //             roomId: parsedData.roomId,
-    //             userId: userId,
-    //             createdAt: new Date()
-    //           }
-    //         });
-
-    //         console.log("Message saved to database:", savedMessage);
-
-    //         // Broadcast message to all users in the room
-    //         const messageToSend = {
-    //           type: 'chat',
-    //           message: parsedData.message,
-    //           roomId: parsedData.roomId,
-    //           userId: userId,
-    //           timestamp: new Date()
-    //         };
-
-    //         users.forEach(u => {
-    //           if (u.rooms.includes(parsedData.roomId)) {
-    //             u.ws.send(JSON.stringify(messageToSend));
-    //           }
-    //         });
-    //         break;
-    //     }
-    //   } catch (error) {
-    //     console.error("Error processing message:", error);
-    //     ws.send(JSON.stringify({ error: "Failed to process message" }));
-    //   }
-    // });
-
-    // Handle disconnection
-    
-    
     ws.on('message', async function message(data) {
       try {
         const messageString = data.toString();
+        console.log(`Received message from user ${userId}:`, messageString);
+        
         const parsedData = JSON.parse(messageString) as ChatMessage;
         const user = users.find(x => x.ws === ws);
     
         if (!user) {
+          console.log(`User ${userId} not found in users array`);
           ws.send(JSON.stringify({ error: "User not found" }));
           return;
         }
     
         switch (parsedData.type) {
           case 'join_room':
+            console.log(`User ${userId} joining room ${parsedData.roomId}`);
             user.rooms.push(parsedData.roomId);
             ws.send(JSON.stringify({
               type: 'system',
@@ -177,10 +114,12 @@ wss.on('connection', async function connection(ws: WebSocket, request: IncomingM
     
           case 'chat':
             if (!parsedData.message) {
+              console.log(`User ${userId} attempted to send empty message`);
               ws.send(JSON.stringify({ error: "No message provided" }));
               return;
             }
     
+            console.log(`Saving message from user ${userId} in room ${parsedData.roomId}`);
             // Save message to database
             const savedMessage = await prismaClient.chatHistory.create({
               data: {
@@ -191,7 +130,7 @@ wss.on('connection', async function connection(ws: WebSocket, request: IncomingM
               }
             });
     
-            console.log("Message saved to database:", savedMessage);
+            console.log("Message saved:", savedMessage);
     
             // Broadcast message to all users in the room
             const messageToSend = {
@@ -202,6 +141,9 @@ wss.on('connection', async function connection(ws: WebSocket, request: IncomingM
               timestamp: new Date()
             };
     
+            const recipientCount = users.filter(u => u.rooms.includes(parsedData.roomId)).length;
+            console.log(`Broadcasting message to ${recipientCount} users in room ${parsedData.roomId}`);
+    
             users.forEach(u => {
               if (u.rooms.includes(parsedData.roomId)) {
                 u.ws.send(JSON.stringify(messageToSend));
@@ -210,14 +152,16 @@ wss.on('connection', async function connection(ws: WebSocket, request: IncomingM
             break;
         }
       } catch (error) {
-        console.error("Error processing message:", error);
+        console.error("Message processing error:", error);
         ws.send(JSON.stringify({ error: "Failed to process message" }));
       }
     });
     
     ws.on('close', () => {
+      connectionCount--;
       const index = users.findIndex(u => u.ws === ws);
       if (index > -1) {
+        console.log(`User ${userId} disconnected. Total connections: ${connectionCount}`);
         users.splice(index, 1);
       }
     });

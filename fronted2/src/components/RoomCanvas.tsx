@@ -1,47 +1,59 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { SOCKET_URL } from '../../config';
-import {Canvas} from './Canvas';
+import { Canvas } from './Canvas';
 
-export default function RoomCanvas({roomId}: {roomId: string}) {
-    //const [loading, setLoading] = React.useState(true);
-    const [socket , setSocket] = React.useState<WebSocket | null>(null);
-    // for using canvas we have to take the ref of the canvas using the userRef hook
+export default function RoomCanvas({ roomId }: { roomId: string }) {
+    const [socket, setSocket] = useState<WebSocket | null>(null);
+    const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
-        if(!roomId) return;
+        if (!roomId) return;
 
-        const ws = new WebSocket(`${SOCKET_URL}?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQsImlhdCI6MTczOTk1NzcxOX0.OLYxBeoAeESYLlS4iO7pc0E7UIMBQ1buQ7tBj6FBKG4`);
-// send a message to the server to join the room
+        const ws = new WebSocket(`${SOCKET_URL}?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc0MzU4ODQ2NSwiZXhwIjoxNzQzNjc0ODY1fQ.4yvebQzCXYdzLmOUntrQjHy4IyFdlTagxGGHU5lnIX8`);
+
         ws.onopen = () => {
+            console.log('WebSocket Connected');
             setSocket(ws);
-            const data =  ws.send(JSON.stringify({
+            setIsConnected(true);
+            
+            // Send join room message
+            ws.send(JSON.stringify({
                 type: 'join-room',
                 roomId
             }));
-            console.log(data)
-        }
-        return () => {
-            ws.close();
-        }
+        };
 
+        ws.onerror = (error) => {
+            console.error('WebSocket Error:', error);
+            setIsConnected(false);
+        };
+
+        ws.onclose = () => {
+            console.log('WebSocket Disconnected');
+            setIsConnected(false);
+        };
+
+        return () => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.close();
+            }
+        };
     }, [roomId]);
 
-
-
-    if (!socket) {
-        return <div>
-            <h1>Connecting to the server ....</h1>
-        </div>
-        
+    if (!socket || !isConnected) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <h1 className="text-xl font-semibold">Connecting to the server...</h1>
+            </div>
+        );
     }
 
     return (
-        <div>
-            <Canvas roomId={roomId} socket={socket}/>
+        <div className="w-full h-full">
+            <Canvas roomId={roomId} socket={socket} />
         </div>
-    )
-
+    );
 }
 
