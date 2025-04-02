@@ -31,7 +31,6 @@ export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , s
                 return;
             }
 
-
             // connect it with the socket
             socket.onmessage = (event) => {
                 const message = JSON.parse(event.data);
@@ -142,7 +141,6 @@ export async function getExistingShapes(roomId: string) {
         const shapes = messages.map((x : {message: string}) => {
             const messageData = JSON.parse(x.message);
             return messageData.shape;
-
         });
 
         return shapes;
