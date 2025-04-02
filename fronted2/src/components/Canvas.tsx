@@ -83,8 +83,15 @@ export function Canvas({ roomId, socket }: CanvasProps) {
     }, [roomId, socket]);
 
     return (
-        <canvas 
-            ref={canvasRef} 
+        // to make the scrolling disable horizonal and vertical both 
+        <canvas style={
+            {
+                height: '100vh',
+                background: 'red',
+                overflow: 'hidden'
+            }
+        }
+            ref={canvasRef} width={window.innerWidth} height={window.innerHeight}
             className="w-full h-full border border-gray-300"
         />
     );

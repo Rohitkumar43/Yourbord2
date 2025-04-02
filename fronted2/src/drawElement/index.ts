@@ -88,7 +88,7 @@ export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , s
                 }));
 
              });
-
+// it sctually re render the components means the reactagnle and diff shapes 
              canvas.addEventListener("mousemove" , (event) => {
                 if (clicked) {
                     const height = event.clientY - startY;
@@ -150,5 +150,10 @@ export async function getExistingShapes(roomId: string) {
         return [];
     }
 }
+
+
+// Now we will work on diff shapes and size 
+
+
 
 
