@@ -14,14 +14,14 @@
 
 
 //     // useeffect to change the context while the component is mounted using the ref
-    
+
 //         useEffect(() => {
 //             if (Canvasref.current) {
 //                 //const canvas =  Canvasref.current;
 //                 drawintial(Canvasref.current , roomId , socket);
 //             }
 //         } , [Canvasref]);
-    
+
 
 
 
@@ -35,7 +35,7 @@
 //                 <div className="m-2 p-2">
 //                     <button className="bg-blue-500 text-white p-3 rounded-lg">Circle</button>
 //                 </div>
-        
+
 //               </div>
 //             </div>
 //           );
@@ -47,16 +47,22 @@
 
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { drawintial } from '../drawElement';
+import { IconButton } from './IconButton';
+import { Circle, Pencil, RectangleHorizontal } from 'lucide-react';
 
 interface CanvasProps {
     roomId: string;
     socket: WebSocket;
 }
 
+// enum - type of the shape 
+type shape = "pencil" | "circle" | "react";
+
 export function Canvas({ roomId, socket }: CanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [selectedTool , setIsselected] = useState<shape>('circle')
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -84,7 +90,8 @@ export function Canvas({ roomId, socket }: CanvasProps) {
 
     return (
         // to make the scrolling disable horizonal and vertical both 
-        <canvas style={
+       <div>
+         <canvas style={
             {
                 height: '100vh',
                 background: 'red',
@@ -93,6 +100,56 @@ export function Canvas({ roomId, socket }: CanvasProps) {
         }
             ref={canvasRef} width={window.innerWidth} height={window.innerHeight}
             className="w-full h-full border border-gray-300"
-        />
+        >
+            </canvas>
+       <UppertoolBox setIsselected={setIsselected} selectedTool={selectedTool}/>
+       </div>
     );
+}
+
+
+
+
+export function UppertoolBox({
+    selectedTool ,
+    setIsselected 
+}: {
+    selectedTool: shape,
+    setIsselected: (s: shape) => void;
+}) {
+    //const [activated , setIsactivated] = useState()<boolean>
+    return (
+        <div style={
+            {
+                position: 'fixed',
+                top: 10,
+                left: 15
+            }
+        }>
+            <div className='flex gap-2'>
+                <IconButton activated={selectedTool === "pencil"} icon={<Pencil />}
+                 onclick={() => { 
+                    setIsselected("pencil");
+                 }}>
+                 </IconButton>
+
+                <IconButton 
+                activated={selectedTool === "react"} 
+                icon={<RectangleHorizontal />} 
+                onclick={() => {
+                    setIsselected("react")
+                }}>
+                </IconButton>
+
+                <IconButton 
+                activated={selectedTool === "circle"} 
+                icon={<Circle />} 
+                onclick={() => { 
+                    setIsselected("circle")
+                }}>
+                </IconButton>
+
+            </div>
+        </div>
+    )
 }
