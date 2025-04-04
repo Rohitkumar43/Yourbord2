@@ -2,11 +2,12 @@
 import axios from "axios";
 import { BACKEND_URL } from "../../config";
 
-
+// Here we areite all the functinality of the canvas ........
 
 // interface of tjhe shape
 type Shape =  {
-    type: 'rect',
+    //@ts-ignore
+    type: 'react',
     x: number;
     y: number;
     width: number;
@@ -40,7 +41,6 @@ export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , s
                     existingShapes.push(parseData);
                     clearContext(canvas, ctx, existingShapes);
                 }
-
             }
 
 
@@ -66,19 +66,43 @@ export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , s
                 startY = event.clientY;
              });
 
+
+             // mouseup	->  Jab mouse chhoda jaye -> 	Drawing end
+
             canvas.addEventListener("mouseup" , (event) => {
                 clicked = false;
                 // get the existing shape
                 const height = event.clientY - startY;
                 const width = event.clientX - startX;
-                const shape : Shape = {
-                    type: 'rect',
-                    x: startX,
-                    y: startY,
-                    width,
-                    height
+                // take the tool and write if else condition 
+             // @ts-ignore
+                const selectedTool = window.selectedTool;
+                let shape : Shape | null =  null;
+                if (selectedTool === "react") {
+                    shape = {
+                        //@ts-ignore
+                        type: "react",
+                        x: startX,
+                        y: startY,
+                        width,
+                        height
+                    }
+                } else if(selectedTool === "circle"){
+                    const radius = Math.max(height + width) / 2;
+                    shape = {
+                        //@ts-ignore
+                        type: "circle",
+                        radius: radius,
+                        centreX: startX + radius,
+                        centerY: startY  + radius ,
+                    }
                 }
-                existingShapes.push(shape);;
+
+                if(!shape){
+                    return;
+                }
+
+                existingShapes.push(shape);
                 // use the socket to send the data to the backend
 
                 socket.send(JSON.stringify({
@@ -88,20 +112,41 @@ export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , s
                 }));
 
              });
-// it sctually re render the components means the reactagnle and diff shapes 
+
+
+
+// it actually re render the components means the reactagnle and diff shapes 
+// mousemove -> Jab mouse move kare -> 	Live drawing
              canvas.addEventListener("mousemove" , (event) => {
                 if (clicked) {
                     const height = event.clientY - startY;
                     const width = event.clientX - startX;
                     clearContext(canvas, ctx, existingShapes);
                     ctx.strokeStyle = 'white';
-                    ctx.strokeRect(startX, startY, width, height);
+                    
+                    // make the logic for the sll the shape z
+                    // @ts-ignore
+                    const selectedTool = window.selectedTool;
+                    if (selectedTool === "react") {
+                        //ctx.strokeRect(startX , startY , width , height) 
+                        ctx.strokeRect(10, 10, 100, 100);
+                        // for the circle
+                    }else if(selectedTool === "circle"){
+                        const radius = Math.max( height + width) / 2;
+                        const centreX = startX + radius;
+                        const centerY = startY + radius;
+                        ctx.beginPath();
+                        ctx.arc(centreX , centerY , radius , 0 , Math.PI * 2 )
+                        ctx.stroke(); // render the circle 
+                        ctx.closePath();
+                    }
+                    
+                    //ctx.strokeRect(startX, startY, width, height);
+
                     // console.log(event.clientX);
                     // console.log(event.clientY)
                 }
              });
-
-            ctx.strokeRect(10, 10, 100, 100);
 
         }
 
@@ -115,12 +160,20 @@ export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , s
 
             // use map for the exting shape 
             existingShapes.map((shape) => {
-                if (shape.type === 'rect') {
+                if (shape.type === 'react') {
                     ctx.strokeStyle = 'white';
                     ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
-                    ctx.fillRect(shape.x, shape.y, shape.width, shape.height);
-                    
-                }
+                    ctx.fillRect(shape.x, shape.y, shape.width, shape.height);  
+                } else if(shape.type === "circle"){
+                    ctx.strokeStyle = 'white';
+                    ctx.beginPath();
+                    ctx.arc(shape.centreX , shape.centerY , shape.radius , 0 , Math.PI * 2 );
+                    ctx.stroke();  //render the image
+                    ctx.closePath();
+
+                    // pencil fxn 
+                } 
+
             })
         }
 
