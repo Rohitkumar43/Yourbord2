@@ -1,6 +1,7 @@
 
 //  type of the shapes
 
+import { Tool } from "@/components/Canvas";
 import { getExistingShapes } from "./httpfxn";
 
 type Shape =  {
@@ -28,6 +29,7 @@ export class canvasClass{
     private clicked: boolean
     private startX: number;
     private startY: number;
+    private selectedTool: Tool = 'circle'
 
 
 
@@ -45,7 +47,10 @@ export class canvasClass{
         this.initHandler();
         this.clearContext();
         this.mouseHandler();
+    }
 
+    setShape(tool: 'circle' | 'react' | 'pencil'){
+        this.selectedTool(tool);
 
     }
 
@@ -153,7 +158,7 @@ export class canvasClass{
 
 // it actually re render the components means the reactagnle and diff shapes 
 // mousemove -> Jab mouse move kare -> 	Live drawing
-this.canvas.addEventListener("mousemove" , (event) => {
+        this.canvas.addEventListener("mousemove" , (event) => {
             if (this.clicked) {
                 const height = event.clientY - this.startY;
                 const width = event.clientX - this.startX;
@@ -182,7 +187,7 @@ this.canvas.addEventListener("mousemove" , (event) => {
                 // console.log(event.clientX);
                 // console.log(event.clientY)
             }
-         });
+        });
 
     }
     

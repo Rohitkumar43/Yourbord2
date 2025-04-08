@@ -57,12 +57,12 @@ interface CanvasProps {
     socket: WebSocket;
 }
 
-// enum - type of the shape 
-type shape = "pencil" | "circle" | "react";
+// enum - type of the tool 
+export type Tool = "pencil" | "circle" | "react";
 
 export function Canvas({ roomId, socket }: CanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [selectedTool , setIsselected] = useState<shape>('circle')
+    const [selectedTool , setIsselected] = useState<Tool>('circle')
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -114,8 +114,8 @@ export function UppertoolBox({
     selectedTool ,
     setIsselected 
 }: {
-    selectedTool: shape,
-    setIsselected: (s: shape) => void;
+    selectedTool: Tool,
+    setIsselected: (s: Tool) => void;
 }) {
     //const [activated , setIsactivated] = useState()<boolean>
     return (
