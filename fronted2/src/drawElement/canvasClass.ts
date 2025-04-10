@@ -51,7 +51,7 @@ export class canvasClass{
 
     setShape(tool: 'circle' | 'react' | 'pencil'){
         this.selectedTool(tool);
-
+ 
     }
 
     async init(){
