@@ -51,6 +51,7 @@ import { useEffect, useRef, useState } from 'react';
 import { drawintial } from '../drawElement';
 import { IconButton } from './IconButton';
 import { Circle, Pencil, RectangleHorizontal } from 'lucide-react';
+import { canvasClass } from '@/drawElement/canvasClass';
 
 interface CanvasProps {
     roomId: string;
@@ -62,11 +63,21 @@ export type Tool = "pencil" | "circle" | "react";
 
 export function Canvas({ roomId, socket }: CanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [canVasClass , setcanVasClass] = useState<canvasClass>();
+    
     const [selectedTool , setIsselected] = useState<Tool>('circle')
+
+
+    useEffect(() => {
+        canVasClass?.setShape(selectedTool);
+    }, [selectedTool , canVasClass])
 
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas || !roomId) {
+            const g = new canvasClass(canvas , roomId , socket)
+            setcanVasClass(g);
+
             console.error('Canvas or roomId not available');
             return;
         }
@@ -86,7 +97,7 @@ export function Canvas({ roomId, socket }: CanvasProps) {
             console.error('Error initializing drawing:', error);
         });
 
-    }, [roomId, socket]);
+    }, [roomId, socket ]);
 
     return (
         // to make the scrolling disable horizonal and vertical both 

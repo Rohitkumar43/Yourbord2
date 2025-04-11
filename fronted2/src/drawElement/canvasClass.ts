@@ -50,12 +50,12 @@ export class canvasClass{
     }
 
     setShape(tool: 'circle' | 'react' | 'pencil'){
-        this.selectedTool(tool);
- 
+        this.selectedTool = tool;
     }
 
     async init(){
         this.existingShapes =await getExistingShapes(this.roomId) 
+        this.clearContext();
     };
 
     initHandler() {
@@ -117,7 +117,7 @@ export class canvasClass{
             const width = event.clientX - this.startX;
             // take the tool and write if else condition 
          // @ts-ignore
-            const selectedTool = window.selectedTool;
+            const selectedTool =this.selectedTool;
             let shape : Shape | null =  null;
             if (selectedTool === "react") {
                 shape = {
@@ -167,7 +167,7 @@ export class canvasClass{
                 
                 // make the logic for the sll the shape z
                 // @ts-ignore
-                const selectedTool = window.selectedTool;
+                const selectedTool =this.selectedTool;
                 if (selectedTool === "react") {
                     //ctx.strokeRect(startX , startY , width , height) 
                     this.ctx.strokeRect(10, 10, 100, 100);
