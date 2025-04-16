@@ -16,7 +16,7 @@ type Shape =  {
     centreX: number;
     centerY: number;
     radius: number;
-} 
+}
 
 
 
@@ -87,7 +87,7 @@ export class canvasClass{
             } else if(shape.type === "circle"){
                 this.ctx.strokeStyle = 'white';
                 this.ctx.beginPath();
-                this.ctx.arc(shape.centreX , shape.centerY , shape.radius , 0 , Math.PI * 2 );
+                this.ctx.arc(shape.centreX , shape.centerY , Math.abs(shape.radius) , 0 , Math.PI * 2 );
                 this.ctx.stroke();  //render the image
                 this.ctx.closePath();
 
@@ -177,7 +177,7 @@ export class canvasClass{
                     const centreX = this.startX + radius;
                     const centerY = this.startY + radius;
                     this.ctx.beginPath();
-                    this.ctx.arc(centreX , centerY , radius , 0 , Math.PI * 2 )
+                    this.ctx.arc(centreX , centerY , Math.abs(radius) , 0 , Math.PI * 2 )
                     this.ctx.stroke(); // render the circle 
                     this.ctx.closePath();
                 }
@@ -190,7 +190,4 @@ export class canvasClass{
         });
 
     }
-    
-
-
 }

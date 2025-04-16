@@ -2,29 +2,199 @@
 
 // make a commeon component and used it in both signin and rhe signup page
 
+"use client"
 
+// Updated Authpage.tsx to handle both sign-in and sign-up
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 
-import React from 'react'
+export function Authpage({ isSignin }: { isSignin: boolean }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-export function Authpage({ isSignin }:
-    {
-        isSignin: boolean
-    }
-) {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+  };
 
-    return (
-        <div className='flex items-center justify-center h-screen w-screen'>
-            <div className="p-2 m-4 bg-white shadow-lg rounded-lg w-96">
-                <div className="text-2xl font-bold text-center p-3 ">
-                    <input type="text" placeholder='email' ></input>
-                </div>
-                <div className="text-2xl font-bold text-center p-3 ">
-                    <input type="password" placeholder='password'></input>
-                </div>
-                <div className="text-2xl font-bold text-center p-3 rounded-lg bg-blue-500 text-white m-3">
-                    <button>{isSignin ? "signin" : "signup"}</button>
-                </div>
+  return (
+    <div className="flex items-center justify-center h-screen w-screen p-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="p-6 bg-white shadow-xl rounded-2xl w-full max-w-md"
+      >
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="mb-8 text-center"
+        >
+          <h1 className="text-3xl font-bold text-purple-800">
+            {isSignin ? "Welcome Back" : "Create Account"}
+          </h1>
+          <p className="text-gray-500 mt-2">
+            {isSignin ? "Sign in to access your account" : "Sign up to get started"}
+          </p>
+        </motion.div>
+
+        <form onSubmit={handleSubmit}>
+          {/* Name field - only for signup */}
+          {!isSignin && (
+            <motion.div 
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              className="mb-4"
+            >
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="name">
+                Full Name
+              </label>
+              <div className="relative">
+                <input 
+                  id="name"
+                  type="text" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="John Doe" 
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+            </motion.div>
+          )}
+
+          {/* Email field */}
+          <motion.div 
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: isSignin ? 0.3 : 0.4, duration: 0.5 }}
+            className="mb-4"
+          >
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="email">
+              Email
+            </label>
+            <div className="relative">
+              <input 
+                id="email"
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com" 
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                required
+              />
             </div>
-        </div>
-    )
+          </motion.div>
+
+          {/* Password field */}
+          <motion.div 
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: isSignin ? 0.4 : 0.5, duration: 0.5 }}
+            className="mb-4"
+          >
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="password">
+              Password
+            </label>
+            <div className="relative">
+              <input 
+                id="password"
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••" 
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                required
+              />
+            </div>
+          </motion.div>
+
+          {/* Confirm Password - only for signup
+          {!isSignin && (
+            <motion.div 
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+              className="mb-6"
+            >
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="confirmPassword">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <input 
+                  id="confirmPassword"
+                  type="password" 
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••" 
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+            </motion.div>
+          )} */}
+
+          {/* Forgot Password - only for signin */}
+          {isSignin && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+              className="flex justify-end mb-6"
+            >
+              <a href="#" className="text-sm text-purple-800 hover:text-purple-900 transition-colors">
+                Forgot password?
+              </a>
+            </motion.div>
+          )}
+
+          {/* Submit button */}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className={`w-full py-3 px-4 rounded-lg font-medium text-white bg-purple-800 hover:bg-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all ${isLoading ? 'opacity-80' : ''}`}
+            type="submit"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing
+              </span>
+            ) : (
+              isSignin ? "Sign In" : "Sign Up"
+            )}
+          </motion.button>
+        </form>
+
+        {/* Switch between sign in and sign up */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+          className="mt-6 text-center"
+        >
+          <p className="text-gray-600">
+            {isSignin ? "Don't have an account? " : "Already have an account? "}
+            <a href={isSignin ? "/signup" : "/signin"} className="text-purple-800 font-medium hover:text-purple-900 transition-colors">
+              {isSignin ? "Sign Up" : "Sign In"}
+            </a>
+          </p>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
 }

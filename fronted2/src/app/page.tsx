@@ -1,5 +1,9 @@
 import Image from "next/image";
 import { Pencil, Share2, Users, Shapes, Github, Download, Twitter, Linkedin, Mail, Heart, Coffee, Star } from 'lucide-react';
+
+
+import signUp from "./signup/page";
+import Link from "next/link";
 export default function Home() {
   return (
     <div className="min-h-screen bg-white">
@@ -14,12 +18,16 @@ export default function Home() {
             <a href="#" className="text-gray-600 hover:text-primary-600 transition-colors">
               <Github className="w-6 h-6" />
             </a>
-            <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
-             SignUp
-            </button>
-            <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+            <Link href="/signup" className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+            </Link>
+            {/* <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+             < signUp />
+            </button> */}
+            {/* <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
               SignIn
-            </button>
+            </button> */}
+            <Link href="/signin" className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+            </Link>
           </div>
         </div>
       </header>
