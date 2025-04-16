@@ -1,28 +1,55 @@
 
 
-// make a commeon component and used it in both signin and rhe signup page
-
 "use client"
 
-// Updated Authpage.tsx to handle both sign-in and sign-up
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { BACKEND_URL } from '../../config';
+import { useRouter } from 'next/navigation';
 
 export function Authpage({ isSignin }: { isSignin: boolean }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const router = useRouter();
   const [name, setName] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+    setError('');
+
+    try {
+      const endpoint = isSignin ? '/signin' : '/signup';
+      const response = await fetch(`${BACKEND_URL}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: email,
+          password: password,
+          ...(isSignin ? {} : { name: name }),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Authentication failed');
+      }
+
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        router.push('/room/1'); // Redirect to room page
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -119,31 +146,6 @@ export function Authpage({ isSignin }: { isSignin: boolean }) {
             </div>
           </motion.div>
 
-          {/* Confirm Password - only for signup
-          {!isSignin && (
-            <motion.div 
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-              className="mb-6"
-            >
-              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="confirmPassword">
-                Confirm Password
-              </label>
-              <div className="relative">
-                <input 
-                  id="confirmPassword"
-                  type="password" 
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••" 
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                  required
-                />
-              </div>
-            </motion.div>
-          )} */}
-
           {/* Forgot Password - only for signin */}
           {isSignin && (
             <motion.div 
@@ -152,9 +154,20 @@ export function Authpage({ isSignin }: { isSignin: boolean }) {
               transition={{ delay: 0.5, duration: 0.5 }}
               className="flex justify-end mb-6"
             >
-              <a href="#" className="text-sm text-purple-800 hover:text-purple-900 transition-colors">
-                Forgot password?
-              </a>
+              <Link href="/forget-password" className="text-sm text-purple-800 hover:text-purple-900 transition-colors">
+                Forgot password
+              </Link>
+            </motion.div>
+          )}
+
+          {/* Error message display */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mb-4 p-2 text-sm text-red-700 bg-red-100 rounded-lg"
+            >
+              {error}
             </motion.div>
           )}
 
@@ -189,9 +202,9 @@ export function Authpage({ isSignin }: { isSignin: boolean }) {
         >
           <p className="text-gray-600">
             {isSignin ? "Don't have an account? " : "Already have an account? "}
-            <a href={isSignin ? "/signup" : "/signin"} className="text-purple-800 font-medium hover:text-purple-900 transition-colors">
+            <Link href={isSignin ? "/signup" : "/signin"} className="text-purple-800 font-medium hover:text-purple-900 transition-colors">
               {isSignin ? "Sign Up" : "Sign In"}
-            </a>
+            </Link>
           </p>
         </motion.div>
       </motion.div>

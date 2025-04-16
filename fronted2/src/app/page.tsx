@@ -12,13 +12,13 @@ export default function Home() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <Shapes className="w-8 h-8 text-primary-600" />
-            <span className="text-2xl font-bold text-primary-600">Excalidraw</span>
+            <span className="text-2xl font-bold text-primary-600">Yourboard</span>
           </div>
           <div className="flex items-center space-x-6">
             <a href="#" className="text-gray-600 hover:text-primary-600 transition-colors">
               <Github className="w-6 h-6" />
             </a>
-            <Link href="/signup" className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+            <Link href="/signup" className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">Signup
             </Link>
             {/* <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
              < signUp />
@@ -26,7 +26,7 @@ export default function Home() {
             {/* <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
               SignIn
             </button> */}
-            <Link href="/signin" className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+            <Link href="/signin" className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">SignIn
             </Link>
           </div>
         </div>

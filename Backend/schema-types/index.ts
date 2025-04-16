@@ -1,17 +1,15 @@
 import { z } from "zod";
 
 export const CreateUserSchema = z.object({
-  username: z.string().min(3).max(20 ,  {
-    message: "Username can only contain letters, numbers, and underscores"
-  }),
-  name: z.string().min(2).max(50),
-  password: z.string()
-    .min(6, { message: "Password must be at least 8 characters long" })
+  username: z.string().min(3),
+  email: z.string().email(),
+  password: z.string().min(6),
+  name: z.string().min(1)
 });
 
 export const signInSchema = z.object({
-  username: z.string().min(3).max(20),
-  password: z.string().min(6)
+  username: z.string(),
+  password: z.string()
 });
 
 export const RoomNameSchema = z.object({

@@ -366,129 +366,234 @@ app.use((req, res, next) => {
     next();
 });
 
-const signupHandler: RequestHandler<{}, any, SignupBody> = async (req, res) => {
-    console.log("[SIGNUP] Received signup request with body:", JSON.stringify(req.body));
+// const signupHandler: RequestHandler<{}, any, SignupBody> = async (req, res) => {
+//     console.log("[SIGNUP] Received signup request with body:", JSON.stringify(req.body));
 
-    const parseData = CreateUserSchema.safeParse(req.body);
+//     const parseData = CreateUserSchema.safeParse(req.body);
     
-    if (!parseData.success) {
-        console.log("[SIGNUP] Validation failed:", JSON.stringify(parseData.error.errors));
-        res.status(400).json({
-            message: parseData.error.errors.map(err => ({
-                field: err.path.join('.'),
-                message: err.message
-            }))
-        });
-        return;
-    }
+//     if (!parseData.success) {
+//         console.log("[SIGNUP] Validation failed:", JSON.stringify(parseData.error.errors));
+//         res.status(400).json({
+//             message: parseData.error.errors.map(err => ({
+//                 field: err.path.join('.'),
+//                 message: err.message
+//             }))
+//         });
+//         return;
+//     }
 
-    try {
-        console.log("[SIGNUP] Validation successful, checking if username exists...");
+//     try {
+//         console.log("[SIGNUP] Validation successful, checking if username exists...");
 
-        const existingUser = await prismaClient.user.findUnique({
-            where: { username: parseData.data.username }
-        });
+//         const existingUser = await prismaClient.user.findUnique({
+//             where: { username: parseData.data.username }
+//         });
 
-        if (existingUser) {
-            console.log("[SIGNUP] Username already exists:", parseData.data.username);
-            res.status(409).json({
-                message: "Username already exists"
-            });
-            return;
-        }
+//         if (existingUser) {
+//             console.log("[SIGNUP] Username already exists:", parseData.data.username);
+//             res.status(409).json({
+//                 message: "Username already exists"
+//             });
+//             return;
+//         }
 
-        console.log("[SIGNUP] Username is available, hashing password...");
-        const hashedPassword = await bcrypt.hash(parseData.data.password, 10);
-        console.log("[SIGNUP] Password hashed successfully.");
+//         console.log("[SIGNUP] Username is available, hashing password...");
+//         const hashedPassword = await bcrypt.hash(parseData.data.password, 10);
+//         console.log("[SIGNUP] Password hashed successfully.");
 
-        console.log("[SIGNUP] Creating user in database...");
-        const user = await prismaClient.user.create({
-            data: {
-                username: parseData.data.username,
-                password: hashedPassword,
-                name: parseData.data.name
-            }
-        });
+//         console.log("[SIGNUP] Creating user in database...");
+//         const user = await prismaClient.user.create({
+//             data: {
+//                 username: parseData.data.username,
+//                 password: hashedPassword,
+//                 name: parseData.data.name
+//             }
+//         });
 
-        console.log("[SIGNUP] User created successfully with ID:", user.id);
-        res.status(201).json({ userId: user.id });
-    } catch (error) {
-        console.error("[SIGNUP] Error creating user:", error);
-        res.status(500).json({
-            message: "Error creating user",
-            error: error instanceof Error ? error.message : String(error)
-        });
-    }
-};
+//         console.log("[SIGNUP] User created successfully with ID:", user.id);
+//         res.status(201).json({ userId: user.id });
+//     } catch (error) {
+//         console.error("[SIGNUP] Error creating user:", error);
+//         res.status(500).json({
+//             message: "Error creating user",
+//             error: error instanceof Error ? error.message : String(error)
+//         });
+//     }
+// };
 
-app.post('/signup', signupHandler);
+// app.post('/signup', signupHandler);
 
-const signInHandler: RequestHandler<{}, any, SignInRequestBody> = async (req, res) => {    
-    console.log("[SIGNIN] Received signin request for username:", req.body.username);
+// const signInHandler: RequestHandler<{}, any, SignInRequestBody> = async (req, res) => {    
+//     console.log("[SIGNIN] Received signin request for username:", req.body.username);
 
-    const parsedData = signInSchema.safeParse(req.body);
+//     const parsedData = signInSchema.safeParse(req.body);
     
-    if (!parsedData.success) {
-        console.log("[SIGNIN] Validation failed:", JSON.stringify(parsedData.error.errors));
-        res.status(400).json({
-            message: "Incorrect inputs",
-            errors: parsedData.error.errors
-        });
-        return;
-    }
+//     if (!parsedData.success) {
+//         console.log("[SIGNIN] Validation failed:", JSON.stringify(parsedData.error.errors));
+//         res.status(400).json({
+//             message: "Incorrect inputs",
+//             errors: parsedData.error.errors
+//         });
+//         return;
+//     }
 
-    try {
-        console.log("[SIGNIN] Looking up user:", parsedData.data.username);
-        const user = await prismaClient.user.findFirst({
-            where: { username: parsedData.data.username }
-        });
+//     try {
+//         console.log("[SIGNIN] Looking up user:", parsedData.data.username);
+//         const user = await prismaClient.user.findFirst({
+//             where: { username: parsedData.data.username }
+//         });
 
-        if (!user) {
-            console.log("[SIGNIN] User not found:", parsedData.data.username);
-            res.status(401).json({
-                message: "Invalid username or password"
-            });
-            return;
-        }
+//         if (!user) {
+//             console.log("[SIGNIN] User not found:", parsedData.data.username);
+//             res.status(401).json({
+//                 message: "Invalid username or password"
+//             });
+//             return;
+//         }
 
-        console.log("[SIGNIN] User found, comparing passwords");
-        const isPasswordValid = await bcrypt.compare(
-            parsedData.data.password, 
-            user.password
-        );
+//         console.log("[SIGNIN] User found, comparing passwords");
+//         const isPasswordValid = await bcrypt.compare(
+//             parsedData.data.password, 
+//             user.password
+//         );
 
-        if (!isPasswordValid) {
-            console.log("[SIGNIN] Password invalid for user:", parsedData.data.username);
-            res.status(401).json({
-                message: "Invalid username or password"
-            });
-            return;
-        }
+//         if (!isPasswordValid) {
+//             console.log("[SIGNIN] Password invalid for user:", parsedData.data.username);
+//             res.status(401).json({
+//                 message: "Invalid username or password"
+//             });
+//             return;
+//         }
 
-        console.log("[SIGNIN] Password valid, generating token");
-        const token = jwt.sign(
-            { userId: user.id }, 
-            JWT_SECRET, 
-            { expiresIn: '24h' }
-        );
+//         console.log("[SIGNIN] Password valid, generating token");
+//         const token = jwt.sign(
+//             { userId: user.id }, 
+//             JWT_SECRET, 
+//             { expiresIn: '24h' }
+//         );
 
-        console.log("[SIGNIN] Login successful for user ID:", user.id);
-        res.json({
-            token,
-            userId: user.id
-        });
-    } catch (error) {
-        console.error("[SIGNIN] Signin error:", error);
-        res.status(500).json({
-            message: "Server error during sign in",
-            error: error instanceof Error ? error.message : String(error)
-        });
-    }
-};
+//         console.log("[SIGNIN] Login successful for user ID:", user.id);
+//         res.json({
+//             token,
+//             userId: user.id
+//         });
+//     } catch (error) {
+//         console.error("[SIGNIN] Signin error:", error);
+//         res.status(500).json({
+//             message: "Server error during sign in",
+//             error: error instanceof Error ? error.message : String(error)
+//         });
+//     }
+// };
 
-app.post('/signin', signInHandler);
+// app.post('/signin', signInHandler);
 
 // Fix the /room POST endpoint with proper typing
+
+
+
+
+// Signup endpoint
+
+// Signup endpoint
+app.post('/signup', (req, res) => {
+    (async () => {
+        try {
+            console.log("[SIGNUP] Request body:", req.body);
+            const parseData = CreateUserSchema.safeParse(req.body);
+            
+            if (!parseData.success) {
+                return res.status(400).json({
+                    message: "Validation failed",
+                    errors: parseData.error.errors
+                });
+            }
+
+            const existingUser = await prismaClient.user.findUnique({
+                where: { email: parseData.data.email}
+            });
+
+            if (existingUser) {
+                return res.status(409).json({
+                    message: "email already exists"
+                });
+            }
+
+            const hashedPassword = await bcrypt.hash(parseData.data.password, 10);
+            const user = await prismaClient.user.create({
+                data: {
+                    email: parseData.data.email,
+                    username: parseData.data.username,
+                    password: hashedPassword,
+                    name: parseData.data.name
+                }
+            });
+
+            const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
+
+            return res.status(201).json({ 
+                message: "User created successfully",
+                token,
+                userId: user.id 
+            });
+        } catch (error) {
+            console.error("[SIGNUP] Error:", error);
+            res.status(500).json({
+                message: "Error creating user"
+            });
+        }
+    })();
+});
+
+// Signin endpoint
+app.post('/signin', (req, res) => {
+    (async () => {
+        try {
+            const parseData = signInSchema.safeParse(req.body);
+            
+            if (!parseData.success) {
+                return res.status(400).json({
+                    message: "Validation failed",
+                    errors: parseData.error.errors
+                });
+            }
+
+            const user = await prismaClient.user.findUnique({
+                where: { email: parseData.data.username }
+            });
+
+            if (!user) {
+                return res.status(401).json({
+                    message: "Invalid username or password"
+                });
+            }
+
+            // Fix: bcrypt.compare instead of bcrypt.hash for password checking
+            const isPasswordValid = await bcrypt.compare(parseData.data.password, user.password);
+            if (!isPasswordValid) {
+                return res.status(401).json({
+                    message: "Invalid username or password"
+                });
+            }
+
+            const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
+
+            res.json({
+                message: "Login successful",
+                token,
+                userId: user.id
+            });
+        } catch (error) {
+            console.error("[SIGNIN] Error:", error);
+            res.status(500).json({
+                message: "Error during sign in"
+            });
+        }
+    })();
+});
+
+
+
 app.post("/room", middleware, async (req: Request, res: Response) => {
     console.log("[ROOM CREATE] Received room creation request:", JSON.stringify(req.body));
     
@@ -526,6 +631,10 @@ app.post("/room", middleware, async (req: Request, res: Response) => {
         });
     }
 });
+
+
+
+// api for the forget passwor==================================================================
 
 // Fix the /chats/:roomId GET endpoint with proper typing
 // app.get("/chats/:roomId", async (req: Request, res: Response) => {

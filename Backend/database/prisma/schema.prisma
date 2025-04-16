@@ -9,11 +9,12 @@ datasource db {
 }
 
 model User {
-  id       Int           @id @default(autoincrement())
-  username String        @unique
-  password String
-  name     String
-  // Add opposite relations
+  id        Int      @id @default(autoincrement())
+  username  String?   
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
   rooms    Room[]        @relation("RoomAdmin")
   chats    ChatHistory[] @relation("UserChats")
 }
