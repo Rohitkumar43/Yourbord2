@@ -498,100 +498,98 @@ app.use((req, res, next) => {
 // Signup endpoint
 app.post('/signup', (req, res) => {
     (async () => {
-        try {
-            console.log("[SIGNUP] Request body:", req.body);
-            const parseData = CreateUserSchema.safeParse(req.body);
-            
-            if (!parseData.success) {
-                return res.status(400).json({
-                    message: "Validation failed",
-                    errors: parseData.error.errors
-                });
-            }
-
-            const existingUser = await prismaClient.user.findUnique({
-                where: { email: parseData.data.email}
-            });
-
-            if (existingUser) {
-                return res.status(409).json({
-                    message: "email already exists"
-                });
-            }
-
-            const hashedPassword = await bcrypt.hash(parseData.data.password, 10);
-            const user = await prismaClient.user.create({
-                data: {
-                    email: parseData.data.email,
-                    username: parseData.data.username,
-                    password: hashedPassword,
-                    name: parseData.data.name
-                }
-            });
-
-            const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
-
-            return res.status(201).json({ 
-                message: "User created successfully",
-                token,
-                userId: user.id 
-            });
-        } catch (error) {
-            console.error("[SIGNUP] Error:", error);
-            res.status(500).json({
-                message: "Error creating user"
-            });
+      try {
+        console.log("[SIGNUP] Request body:", req.body);
+        const parseData = CreateUserSchema.safeParse(req.body);
+        
+        if (!parseData.success) {
+          return res.status(400).json({
+            message: "Validation failed",
+            errors: parseData.error.errors
+          });
         }
+  
+        const existingUser = await prismaClient.user.findUnique({
+          where: { email: parseData.data.email }
+        });
+  
+        if (existingUser) {
+          return res.status(409).json({
+            message: "Email already exists"
+          });
+        }
+  
+        const hashedPassword = await bcrypt.hash(parseData.data.password, 10);
+        const user = await prismaClient.user.create({
+          data: {
+            email: parseData.data.email,
+            username: parseData.data.username || null, // Username is optional
+            password: hashedPassword,
+            name: parseData.data.name
+          }
+        });
+  
+        const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
+  
+        return res.status(201).json({ 
+          message: "User created successfully",
+          token,
+          userId: user.id 
+        });
+      } catch (error) {
+        console.error("[SIGNUP] Error:", error);
+        res.status(500).json({
+          message: "Error creating user"
+        });
+      }
     })();
-});
-
-// Signin endpoint
-app.post('/signin', (req, res) => {
+  });
+  
+  // Signin endpoint
+  app.post('/signin', (req, res) => {
     (async () => {
-        try {
-            const parseData = signInSchema.safeParse(req.body);
-            
-            if (!parseData.success) {
-                return res.status(400).json({
-                    message: "Validation failed",
-                    errors: parseData.error.errors
-                });
-            }
-
-            const user = await prismaClient.user.findUnique({
-                where: { email: parseData.data.username }
-            });
-
-            if (!user) {
-                return res.status(401).json({
-                    message: "Invalid username or password"
-                });
-            }
-
-            // Fix: bcrypt.compare instead of bcrypt.hash for password checking
-            const isPasswordValid = await bcrypt.compare(parseData.data.password, user.password);
-            if (!isPasswordValid) {
-                return res.status(401).json({
-                    message: "Invalid username or password"
-                });
-            }
-
-            const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
-
-            res.json({
-                message: "Login successful",
-                token,
-                userId: user.id
-            });
-        } catch (error) {
-            console.error("[SIGNIN] Error:", error);
-            res.status(500).json({
-                message: "Error during sign in"
-            });
+      try {
+        const parseData = signInSchema.safeParse(req.body);
+        
+        if (!parseData.success) {
+          return res.status(400).json({
+            message: "Validation failed",
+            errors: parseData.error.errors
+          });
         }
+  
+        const user = await prismaClient.user.findUnique({
+          where: { email: parseData.data.email }
+        });
+  
+        if (!user) {
+          return res.status(401).json({
+            message: "Invalid email or password"
+          });
+        }
+  
+        const isPasswordValid = await bcrypt.compare(parseData.data.password, user.password);
+        if (!isPasswordValid) {
+          return res.status(401).json({
+            message: "Invalid email or password"
+          });
+        }
+  
+        const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
+  
+        res.json({
+          message: "Login successful",
+          token,
+          userId: user.id
+        });
+      } catch (error) {
+        console.error("[SIGNIN] Error:", error);
+        res.status(500).json({
+          message: "Error during sign in"
+        });
+      }
     })();
-});
-
+  });
 
 
 app.post("/room", middleware, async (req: Request, res: Response) => {

@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import React, { useState } from 'react';
@@ -10,11 +9,12 @@ import { useRouter } from 'next/navigation';
 
 export function Authpage({ isSignin }: { isSignin: boolean }) {
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const router = useRouter();
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,17 +23,25 @@ export function Authpage({ isSignin }: { isSignin: boolean }) {
 
     try {
       const endpoint = isSignin ? '/signin' : '/signup';
+      
+      // Prepare request body based on whether it's signin or signup
+      const requestBody = isSignin 
+        ? { email, password } 
+        : { email, username, password, name };
+          
+      console.log('Attempting to', isSignin ? 'sign in' : 'sign up', 'with:', requestBody);
+      
       const response = await fetch(`${BACKEND_URL}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          username: email,
-          password: password,
-          ...(isSignin ? {} : { name: name }),
-        }),
+        body: JSON.stringify(requestBody),
+        credentials: 'include',
       });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
       const data = await response.json();
 
@@ -75,12 +83,59 @@ export function Authpage({ isSignin }: { isSignin: boolean }) {
         </motion.div>
 
         <form onSubmit={handleSubmit}>
+          {/* Email field */}
+          <motion.div 
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: isSignin ? 0.3 : 0.3, duration: 0.5 }}
+            className="mb-4"
+          >
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="email">
+              Email
+            </label>
+            <div className="relative">
+              <input 
+                id="email"
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com" 
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                required
+              />
+            </div>
+          </motion.div>
+
+          {/* Username field - only for signup */}
+          {!isSignin && (
+            <motion.div 
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+              className="mb-4"
+            >
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="username">
+                Username
+              </label>
+              <div className="relative">
+                <input 
+                  id="username"
+                  type="text" 
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="johndoe" 
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                />
+              </div>
+            </motion.div>
+          )}
+
           {/* Name field - only for signup */}
           {!isSignin && (
             <motion.div 
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
               className="mb-4"
             >
               <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="name">
@@ -100,34 +155,11 @@ export function Authpage({ isSignin }: { isSignin: boolean }) {
             </motion.div>
           )}
 
-          {/* Email field */}
-          <motion.div 
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: isSignin ? 0.3 : 0.4, duration: 0.5 }}
-            className="mb-4"
-          >
-            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="email">
-              Email
-            </label>
-            <div className="relative">
-              <input 
-                id="email"
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com" 
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                required
-              />
-            </div>
-          </motion.div>
-
           {/* Password field */}
           <motion.div 
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: isSignin ? 0.4 : 0.5, duration: 0.5 }}
+            transition={{ delay: isSignin ? 0.4 : 0.6, duration: 0.5 }}
             className="mb-4"
           >
             <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="password">
