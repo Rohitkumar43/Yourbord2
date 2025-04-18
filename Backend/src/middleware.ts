@@ -41,25 +41,33 @@ declare global {
   }
 }
 
-export function middleware(req: Request, res: Response, next: NextFunction): void {
+/**
+ * Authentication middleware that verifies JWT tokens
+ * @param req Express request object
+ * @param res Express response object
+ * @param next Express next function
+ */
+export function authenticateToken(req: Request, res: Response, next: NextFunction): void {
   console.log("[AUTH] Checking authorization for request:", req.method, req.path);
   
   // Check the authorization header
-  const token = req.headers["authorization"] ?? "";
-  console.log("[AUTH] Authorization header present:", !!token);
+  const authHeader = req.headers["authorization"];
+  console.log("[AUTH] Authorization header present:", !!authHeader);
   
-  if (!token) {
-    console.log("[AUTH] No token provided in authorization header");
-    res.status(403).json({
-      message: "Unauthorized access - No token provided"
+  if (!authHeader) {
+    console.log("[AUTH] No authorization header provided");
+    res.status(401).json({
+      message: "Authentication required"
     });
     return;
   }
 
   // Improved token extraction
-  let tokenValue = token;
-  if (token.startsWith('Bearer ')) {
-    tokenValue = token.slice(7);
+  const token = authHeader.startsWith('Bearer ') 
+    ? authHeader.slice(7) 
+    : authHeader;
+    
+  if (authHeader.startsWith('Bearer ')) {
     console.log("[AUTH] Bearer token format detected, extracted token");
   } else {
     console.log("[AUTH] WARNING: Token doesn't use Bearer format");
@@ -67,16 +75,19 @@ export function middleware(req: Request, res: Response, next: NextFunction): voi
 
   try {
     console.log("[AUTH] Attempting to verify token");
-    const decoded = jwt.verify(tokenValue, JWT_SECRET) as { userId: number };
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
     
     console.log("[AUTH] Token verified successfully for userId:", decoded.userId);
     req.userId = decoded.userId;
     next();
   } catch (error) {
-    console.error("[AUTH] Token verification failed:", error);
+    console.error("[AUTH] Token verification failed:", error instanceof Error ? error.message : String(error));
     
     res.status(403).json({
-      message: "Unauthorized access - Invalid token"
+      message: "Invalid or expired token"
     });
   }
 }
+
+// Export named function for use in routes
+export { authenticateToken as middleware };
