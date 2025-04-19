@@ -331,40 +331,40 @@
 // app.listen(3004);
 
 
-import express, { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { middleware } from "./middleware";
-import { CreateUserSchema, RoomNameSchema, signInSchema } from "../schema-types/index";
-import { prismaClient } from "../database/src/index";
-import cors from "cors";
-import { RequestHandler } from 'express';
-import { error } from "console";
-import bcrypt from "bcrypt";
+// import express, { Request, Response, NextFunction } from "express";
+// import jwt from "jsonwebtoken";
+// import { middleware } from "./middleware";
+// import { CreateUserSchema, RoomNameSchema, signInSchema } from "../schema-types/index";
+// import { prismaClient } from "../database/src/index";
+// import cors from "cors";
+// import { RequestHandler } from 'express';
+// import { error } from "console";
+// import bcrypt from "bcrypt";
 
-interface SignupBody {
-    username: string;
-    password: string;
-    name: string;
-}
+// interface SignupBody {
+//     username: string;
+//     password: string;
+//     name: string;
+// }
 
-interface SignInRequestBody {
-    username: string;
-    password: string;
-}
+// interface SignInRequestBody {
+//     username: string;
+//     password: string;
+// }
 
-const JWT_SECRET = process.env.JWT_SECRET ?? "121212"; // Secret key for JWT
-console.log(`[CONFIG] JWT_SECRET ${process.env.JWT_SECRET ? 'loaded from env' : 'using fallback'}`);
+// const JWT_SECRET = process.env.JWT_SECRET ?? "121212"; // Secret key for JWT
+// console.log(`[CONFIG] JWT_SECRET ${process.env.JWT_SECRET ? 'loaded from env' : 'using fallback'}`);
 
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+// const app = express();
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+// app.use(cors());
 
-// Add request logging middleware
-app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    next();
-});
+// // Add request logging middleware
+// app.use((req, res, next) => {
+//     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+//     next();
+// });
 
 // const signupHandler: RequestHandler<{}, any, SignupBody> = async (req, res) => {
 //     console.log("[SIGNUP] Received signup request with body:", JSON.stringify(req.body));
@@ -497,105 +497,152 @@ app.use((req, res, next) => {
 
 // Signup endpoint
 // Signup endpoint
-export async function signup(req: Request, res: Response): Promise<void> {
-    try {
-      console.log("[SIGNUP] Request body:", req.body);
-      const parseData = CreateUserSchema.safeParse(req.body);
-      
-      if (!parseData.success) {
-        res.status(400).json({
-          message: "Validation failed",
-          errors: parseData.error.errors
-        });
-        return;
-      }
-  
-      const existingUser = await prismaClient.user.findUnique({
-        where: { email: parseData.data.email }
-      });
-  
-      if (existingUser) {
-        res.status(409).json({
-          message: "Email already exists"
-        });
-        return;
-      }
-  
-      const hashedPassword = await bcrypt.hash(parseData.data.password, 10);
-      const user = await prismaClient.user.create({
-        data: {
-          email: parseData.data.email,
-          username: parseData.data.username || null, // Username is optional
-          password: hashedPassword,
-          name: parseData.data.name
-        }
-      });
-  
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
-  
-      res.status(201).json({ 
-        message: "User created successfully",
-        token,
-        userId: user.id 
-      });
-    } catch (error) {
-      console.error("[SIGNUP] Error:", error);
-      res.status(500).json({
-        message: "Error creating user"
-      });
-    }
-  }
-  
-  // Signin endpoint
-  export async function signin(req: Request, res: Response): Promise<void> {
-    try {
-      console.log("[SIGNIN] Request body:", req.body);
-      const parseData = signInSchema.safeParse(req.body);
-      
-      if (!parseData.success) {
-        res.status(400).json({
-          message: "Validation failed",
-          errors: parseData.error.errors
-        });
-        return;
-      }
-  
-      const user = await prismaClient.user.findUnique({
-        where: { email: parseData.data.email }
-      });
-  
-      if (!user) {
-        res.status(401).json({
-          message: "Invalid email or password"
-        });
-        return;
-      }
-  
-      const isPasswordValid = await bcrypt.compare(parseData.data.password, user.password);
-      if (!isPasswordValid) {
-        res.status(401).json({
-          message: "Invalid email or password"
-        });
-        return;
-      }
-  
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
-  
-      res.json({
-        message: "Login successful",
-        token,
-        userId: user.id
-      });
-    } catch (error) {
-      console.error("[SIGNIN] Error:", error);
-      res.status(500).json({
-        message: "Error during sign in"
-      });
-    }
-  }
-  
 
 
+
+
+
+
+
+
+
+
+
+
+
+import express from 'express';
+import cors from 'cors';
+import { Request, Response } from 'express';
+import { prismaClient } from '../database/src/index';
+import { CreateUserSchema, RoomNameSchema, signInSchema } from '../schema-types/index';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { middleware } from './middleware';
+
+// Constants
+const JWT_SECRET = process.env.JWT_SECRET ?? "121212";
+const PORT = process.env.PORT || 3001;
+
+// Initialize Express app
+const app = express();
+
+// Configure middleware
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+// Apply middleware
+app.use(cors(corsOptions));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Request logging middleware
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+});
+
+// Authentication routes
+app.post("/signup", async (req: Request, res: Response) => {
+  try {
+    console.log("[SIGNUP] Request body:", req.body);
+    const parseData = CreateUserSchema.safeParse(req.body);
+    
+    if (!parseData.success) {
+      res.status(400).json({
+        message: "Validation failed",
+        errors: parseData.error.errors
+      });
+      return;
+    }
+
+    const existingUser = await prismaClient.user.findUnique({
+      where: { email: parseData.data.email }
+    });
+
+    if (existingUser) {
+      res.status(409).json({
+        message: "Email already exists"
+      });
+      return;
+    }
+
+    const hashedPassword = await bcrypt.hash(parseData.data.password, 10);
+    const user = await prismaClient.user.create({
+      data: {
+        email: parseData.data.email,
+        username: parseData.data.username,
+        password: hashedPassword,
+        name: parseData.data.username // Using username as name since we're not collecting name separately
+      }
+    });
+
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
+
+    res.status(201).json({ 
+      message: "User created successfully",
+      token,
+      userId: user.id 
+    });
+  } catch (error) {
+    console.error("[SIGNUP] Error:", error);
+    res.status(500).json({
+      message: "Error creating user"
+    });
+  }
+});
+
+app.post("/signin", async (req: Request, res: Response) => {
+  try {
+    console.log("[SIGNIN] Request body:", req.body);
+    const parseData = signInSchema.safeParse(req.body);
+    
+    if (!parseData.success) {
+      res.status(400).json({
+        message: "Validation failed",
+        errors: parseData.error.errors
+      });
+      return;
+    }
+
+    const user = await prismaClient.user.findUnique({
+      where: { email: parseData.data.email }
+    });
+
+    if (!user) {
+      res.status(401).json({
+        message: "Invalid email or password"
+      });
+      return;
+    }
+
+    const isPasswordValid = await bcrypt.compare(parseData.data.password, user.password);
+    if (!isPasswordValid) {
+      res.status(401).json({
+        message: "Invalid email or password"
+      });
+      return;
+    }
+
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
+
+    res.json({
+      message: "Login successful",
+      token,
+      userId: user.id
+    });
+  } catch (error) {
+    console.error("[SIGNIN] Error:", error);
+    res.status(500).json({
+      message: "Error during sign in"
+    });
+  }
+});
+
+// Protected routes - all routes below this require authentication
 app.post("/room", middleware, async (req: Request, res: Response) => {
     console.log("[ROOM CREATE] Received room creation request:", JSON.stringify(req.body));
     
@@ -633,6 +680,8 @@ app.post("/room", middleware, async (req: Request, res: Response) => {
         });
     }
 });
+
+
 
 
 
