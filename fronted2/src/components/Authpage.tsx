@@ -50,7 +50,7 @@ export function Authpage({ isSignin }: { isSignin: boolean }) {
 
       if (data.token) {
         localStorage.setItem('token', data.token);
-        router.push('/room/1'); // Redirect to room page
+        router.push('/create-room'); // Redirect to room page
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
