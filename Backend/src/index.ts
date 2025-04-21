@@ -86,7 +86,7 @@
 
 import express from 'express';
 import cors from 'cors';
-import { Request, Response } from 'express';
+import { Request, Response, Application } from 'express';
 import { prismaClient } from '../database/src/index';
 import { CreateUserSchema, RoomNameSchema, signInSchema } from '../schema-types/index';
 import bcrypt from 'bcrypt';
@@ -98,7 +98,12 @@ const JWT_SECRET = process.env.JWT_SECRET ?? "121212";
 const PORT = process.env.PORT || 3001;
 
 // Initialize Express app
+// Create the Express application instance
+//const app: Application = express();
+
 const app = express();
+// Create the Express application instanceconst app: Application = express();
+
 
 // Configure middleware
 const corsOptions = {
@@ -263,37 +268,37 @@ app.post("/room", middleware, async (req: Request, res: Response) => {
 
 //Fix the /chats/:roomId GET endpoint with proper typing
 app.get("/chats/:roomId", async (req: Request, res: Response) => {
-    const roomId = Number(req.params.roomId);
-    console.log(`[CHAT HISTORY] Fetching messages for room ID: ${roomId}`);
+  const roomId = Number(req.params.roomId);
+  console.log(`[CHAT HISTORY] Fetching messages for room ID: ${roomId}`);
 
-    if (isNaN(roomId)) {
-        console.log("[CHAT HISTORY] Invalid roomId format");
-        return res.status(400).json({ error: "Invalid roomId format" });
-    }
+  if (isNaN(roomId)) {
+      console.log("[CHAT HISTORY] Invalid roomId format");
+      return res.status(400).json({ error: "Invalid roomId format" });
+  }
 
-    try {
-        console.log(`[CHAT HISTORY] Finding messages for room ID: ${roomId}`);
-        const messages = await prismaClient.chatHistory.findMany({
-            where: {
-                roomId: roomId
-            },
-            orderBy: {
-                id: "desc"
-            },
-            take: 1000
-        });
+  try {
+      console.log(`[CHAT HISTORY] Finding messages for room ID: ${roomId}`);
+      const messages = await prismaClient.chatHistory.findMany({
+          where: {
+              roomId: roomId
+          },
+          orderBy: {
+              id: "desc"
+          },
+          take: 1000
+      });
 
-        console.log(`[CHAT HISTORY] Found ${messages.length} messages for room ID: ${roomId}`);
-        res.json({
-            messages
-        });
-    } catch(e) {
-        console.error("[CHAT HISTORY] Error fetching messages:", e);
-        res.status(500).json({
-            message: "Failed to fetch messages",
-            error: e instanceof Error ? e.message : String(e)
-        });
-    }
+      console.log(`[CHAT HISTORY] Found ${messages.length} messages for room ID: ${roomId}`);
+      return res.json({
+          messages
+      });
+  } catch(e) {
+      console.error("[CHAT HISTORY] Error fetching messages:", e);
+      return res.status(500).json({
+          message: "Failed to fetch messages",
+          error: e instanceof Error ? e.message : String(e)
+      });
+  }
 });
 
 // Fix the /room/:slug GET endpoint with proper typing
