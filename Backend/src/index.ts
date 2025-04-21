@@ -222,7 +222,7 @@ app.post("/signin", async (req: Request, res: Response) => {
 });
 
 // Protected routes - all routes below this require authentication
-app.post("/room", middleware, async (req: Request, res: Response) => {
+app.post("/room", middleware, async (req , res) => {
     console.log("[ROOM CREATE] Received room creation request:", JSON.stringify(req.body));
     
     const parsedData = RoomNameSchema.safeParse(req.body);

@@ -22,15 +22,17 @@ export default function CreateRoom() {
     
     try {
       // Using your actual API endpoint for room creation
-      const response = await fetch('/api/room', {
+      const response = await fetch('http://localhost:3004/room', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           // Include authorization if you're using JWT
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
+        credentials: 'include', // for thr cors 
         body: JSON.stringify({ name: roomName }),
       });
+      console.log(response);
       
       if (!response.ok) {
         const errorData = await response.json();

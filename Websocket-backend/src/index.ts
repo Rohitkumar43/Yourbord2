@@ -17,7 +17,14 @@ let connectionCount = 0;
 
 const wss = new WebSocketServer({ 
     port: PORT,
-    host: 'localhost'
+    host: 'localhost',
+    // Add CORS settings
+    verifyClient: (info, callback) => {
+        // Allow connections from your frontend origin
+        const origin = info.origin;
+        const isValidOrigin = origin === 'http://localhost:3000';
+        callback(isValidOrigin, 200, 'Unauthorized origin');
+    }
 });
 
 console.log(`WebSocket server listening on ws://localhost:${PORT}`);
@@ -28,24 +35,38 @@ wss.on('connection', async function connection(ws: WebSocket, request: IncomingM
     
     try {
         // Get token from URL
-        const url = request.url;
-        if (!url) {
-            console.log('Connection rejected: No URL provided');
-            ws.send(JSON.stringify({ error: "No URL provided" }));
+        // const url = request.url;
+        // if (!url) {
+        //     console.log('Connection rejected: No URL provided');
+        //     ws.send(JSON.stringify({ error: "No URL provided" }));
+        //     ws.close();
+        //     return;
+        // }
+
+        // // Parse token
+        // const queryParams = new URLSearchParams(url.split('?')[1]);
+        // const token = queryParams.get("token");
+        
+        // if (!token) {
+        //     console.log('Connection rejected: No token provided');
+        //     ws.send(JSON.stringify({ error: "No token provided" }));
+        //     ws.close();
+        //     return;
+        // }
+
+
+        // Get token and roomId from URL
+        const url = new URL(request.url ?? '', 'ws://localhost:8080');
+        const token = url.searchParams.get('token');
+        const roomId = url.searchParams.get('roomId');
+
+        if (!token || !roomId) {
+            console.log('Connection rejected: Missing token or roomId');
+            ws.send(JSON.stringify({ error: "Missing token or roomId" }));
             ws.close();
             return;
         }
 
-        // Parse token
-        const queryParams = new URLSearchParams(url.split('?')[1]);
-        const token = queryParams.get("token");
-        
-        if (!token) {
-            console.log('Connection rejected: No token provided');
-            ws.send(JSON.stringify({ error: "No token provided" }));
-            ws.close();
-            return;
-        }
 
         // Verify token
         const userAuth = jwt.verify(token, JWT_SECRET) as JwtPayload;

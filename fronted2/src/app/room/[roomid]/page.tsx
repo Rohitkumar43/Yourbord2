@@ -8,6 +8,7 @@ export default async function canvasPage({params}: {
 }) {
 
   const roomId = await params.roomId;
+  console.log('did not get the roomid')
   console.log(roomId);
 
 
