@@ -267,7 +267,7 @@ app.post("/room", middleware, async (req , res) => {
 // api for the forget passwor==================================================================
 
 //Fix the /chats/:roomId GET endpoint with proper typing
-app.get("/chats/:roomId", async (req: Request, res: Response) => {
+app.get("/room/:roomId", async (req: Request, res: Response) => {
   const roomId = Number(req.params.roomId);
   console.log(`[CHAT HISTORY] Fetching messages for room ID: ${roomId}`);
 

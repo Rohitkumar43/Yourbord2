@@ -75,12 +75,12 @@ export function Canvas({ roomId, socket }: CanvasProps) {
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas || !roomId) {
-            const g = new canvasClass(canvas , roomId , socket)
-            setcanVasClass(g);
-
             console.error('Canvas or roomId not available');
             return;
         }
+
+        const g = new canvasClass(canvas, roomId, socket);
+        setcanVasClass(g);
 
         console.log('Initializing canvas for room:', roomId);
         canvas.width = window.innerWidth;

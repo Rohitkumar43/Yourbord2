@@ -1,19 +1,21 @@
 
 import RoomCanvas from '@/components/RoomCanvas';
-export default async function canvasPage({params}: {
+import { error } from 'console';
+
+export default function RoomPage({params}: {
   params: {
-    // this param stored the room  id 
     roomId: string;
   };
 }) {
+  // Ensure roomId is properly passed from the URL parameter
+  const roomId = params.roomId;
 
-  const roomId = await params.roomId;
-  console.log('did not get the roomid')
-  console.log(roomId);
+  console.log(error);
 
-
-  return <RoomCanvas roomId={params.roomId}/>
   
- 
-}
+  if (!roomId) {
+    return <div>Invalid Room ID</div>;
+  }
 
+  return <RoomCanvas roomId={roomId} />;
+}

@@ -85,77 +85,74 @@ export default function RoomCanvas({ roomId }: { roomId: string }) {
     // }, [roomId , router]);
 
 
+
+
     useEffect(() => {
-        let ws: WebSocket | null;
-        
+        let ws: WebSocket | null = null;
+
         const connectWebSocket = () => {
             if (!roomId) {
                 console.error('No roomId provided');
+                setError('Invalid room ID');
                 return;
             }
-    
+
             const token = localStorage.getItem('token');
             if (!token) {
                 setError('No authentication token found. Please login.');
-                router.push('/signin')
+                router.push('/signin');
                 return;
             }
-    
-            console.log('Connecting to WebSocket:', SOCKET_URL);
-            console.log('Room ID:', roomId);
-            console.log('Token:', token.substring(0, 10) + '...');
-    
-            // Assign to the outer ws variable so it's accessible in the cleanup function
-            ws = new WebSocket(`${SOCKET_URL}?token=${token}&roomId=${roomId}`);
-    
-            ws.onopen = () => {
-                console.log('WebSocket Connected Successfully');
-                setSocket(ws);
-                setIsConnected(true);
-                
-                // Join room
-                if (ws) {
-                    ws.send(JSON.stringify({
-                        type: 'join_room',
-                        roomId: roomId
-                    }));
-                }
-            };
-    
-            // Rest of the WebSocket event handlers...
 
-            ws.onmessage = (event) => {
-                            console.log('Received message:', event.data);
-                            try {
-                                const data = JSON.parse(event.data);
-                                if (data.error) {
-                                    console.error('WebSocket error:', data.error);
-                                    setError(data.error);
-                                    return;
-                                }
-                                // Handle other message types...
-                            } catch (error) {
-                                console.error('Error parsing message:', error);
-                            }
-                        };
-                
-                        ws.onerror = (event) => {
-                            console.error('WebSocket Error:', event);
-                            setError('Failed to connect to server');
-                            setIsConnected(false);
-                        };
-                
-                        ws.onclose = () => {
-                            console.log('WebSocket Disconnected');
-                            setIsConnected(false);
-                        };
-                //     }
+            console.log('Connecting to WebSocket with room:', roomId);
+            
+            try {
+                ws = new WebSocket(`${SOCKET_URL}?token=${token}&roomId=${roomId}`);
 
+                ws.onopen = () => {
+                    console.log('WebSocket Connected Successfully');
+                    setSocket(ws);
+                    setIsConnected(true);
+                    
+                    if (ws) {
+                        ws.send(JSON.stringify({
+                            type: 'join_room',
+                            roomId: roomId
+                        }));
+                    }
+                };
 
-        }
-    
+                ws.onmessage = (event) => {
+                    console.log('Received message:', event.data);
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.error) {
+                            console.error('WebSocket error:', data.error);
+                            setError(data.error);
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('Error parsing message:', error);
+                    }
+                };
+                ws.onerror = (event) => {
+                    console.error('WebSocket Error:', event);
+                    setError('Failed to connect to server');
+                    setIsConnected(false);
+                };
+
+                ws.onclose = () => {
+                    console.log('WebSocket Disconnected');
+                    setIsConnected(false);
+                };
+            } catch (error) {
+                console.error('Error creating WebSocket connection:', error);
+                setError('Failed to connect to server');
+            }
+        };
+
         connectWebSocket();
-    
+
         return () => {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.close();
@@ -163,6 +160,8 @@ export default function RoomCanvas({ roomId }: { roomId: string }) {
         };
     }, [roomId, router]);
 
+
+   
     if (error) {
         return (
             <div className="flex items-center justify-center min-h-screen">
