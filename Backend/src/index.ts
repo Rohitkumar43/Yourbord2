@@ -266,8 +266,78 @@ app.post("/room", middleware, async (req , res) => {
 
 // api for the forget passwor==================================================================
 
-//Fix the /chats/:roomId GET endpoint with proper typing
+// Add a new endpoint to get room by ID
 app.get("/room/:roomId", async (req: Request, res: Response) => {
+  const roomId = Number(req.params.roomId);
+  console.log(`[ROOM INFO] Fetching room with ID: ${roomId}`);
+
+  if (isNaN(roomId)) {
+      console.log("[ROOM INFO] Invalid roomId format");
+      return res.status(400).json({ error: "Invalid roomId format" });
+  }
+
+  try {
+      const room = await prismaClient.room.findUnique({
+          where: {
+              id: roomId
+          }
+      });
+
+      if (!room) {
+          console.log(`[ROOM INFO] Room with ID ${roomId} not found`);
+          return res.status(404).json({ error: "Room not found" });
+      }
+
+      console.log(`[ROOM INFO] Found room: ${JSON.stringify(room)}`);
+      return res.json({
+          room
+      });
+  } catch(e) {
+      console.error("[ROOM INFO] Error fetching room:", e);
+      return res.status(500).json({
+          message: "Failed to fetch room",
+          error: e instanceof Error ? e.message : String(e)
+      });
+  }
+});
+
+//Fix the /chats/:roomId GET endpoint with proper typing
+app.get("/room/id/:roomId", async (req: Request, res: Response) => {
+  const roomId = Number(req.params.roomId);
+  console.log(`[ROOM INFO] Fetching room with ID: ${roomId}`);
+
+  if (isNaN(roomId)) {
+      console.log("[ROOM INFO] Invalid roomId format");
+      return res.status(400).json({ error: "Invalid roomId format" });
+  }
+
+  try {
+      const room = await prismaClient.room.findUnique({
+          where: {
+              id: roomId
+          }
+      });
+
+      if (!room) {
+          console.log(`[ROOM INFO] Room with ID ${roomId} not found`);
+          return res.status(404).json({ error: "Room not found" });
+      }
+
+      console.log(`[ROOM INFO] Found room: ${JSON.stringify(room)}`);
+      return res.json({
+          room
+      });
+  } catch(e) {
+      console.error("[ROOM INFO] Error fetching room:", e);
+      return res.status(500).json({
+          message: "Failed to fetch room",
+          error: e instanceof Error ? e.message : String(e)
+      });
+  }
+});
+
+//Fix the /chats/:roomId GET endpoint with proper typing
+app.get("/room/id/slug/:roomId", async (req: Request, res: Response) => {
   const roomId = Number(req.params.roomId);
   console.log(`[CHAT HISTORY] Fetching messages for room ID: ${roomId}`);
 
@@ -302,7 +372,7 @@ app.get("/room/:roomId", async (req: Request, res: Response) => {
 });
 
 // Fix the /room/:slug GET endpoint with proper typing
-app.get("/room/:slug", async (req: Request, res: Response) => {
+app.get("/room/slug/:slug", async (req: Request, res: Response) => {
     const slug = req.params.slug;
     console.log(`[ROOM LOOKUP] Looking up room with slug: ${slug}`);
     
@@ -321,6 +391,39 @@ app.get("/room/:slug", async (req: Request, res: Response) => {
         console.error("[ROOM LOOKUP] Error looking up room:", e);
         res.status(500).json({
             message: "Failed to lookup room",
+            error: e instanceof Error ? e.message : String(e)
+        });
+    }
+});
+
+// Get all rooms endpoint
+app.get("/all-rooms", middleware, async (req: Request, res: Response) => {
+    console.log(`[ALL ROOMS] Fetching all rooms for user: ${req.userId}`);
+    
+    try {
+        // Get all rooms, ordered by most recently created
+        const rooms = await prismaClient.room.findMany({
+            orderBy: {
+                createdAt: 'desc'
+            },
+            include: {
+                admin: {
+                    select: {
+                        username: true,
+                        name: true
+                    }
+                }
+            }
+        });
+        
+        console.log(`[ALL ROOMS] Found ${rooms.length} rooms`);
+        res.json({
+            rooms
+        });
+    } catch (e) {
+        console.error("[ALL ROOMS] Error fetching rooms:", e);
+        res.status(500).json({
+            message: "Failed to fetch rooms",
             error: e instanceof Error ? e.message : String(e)
         });
     }

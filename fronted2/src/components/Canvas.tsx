@@ -105,7 +105,7 @@ export function Canvas({ roomId, socket }: CanvasProps) {
          <canvas style={
             {
                 height: '100vh',
-                background: 'red',
+                background: 'black',
                 overflow: 'hidden'
             }
         }

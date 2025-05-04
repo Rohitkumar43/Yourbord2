@@ -60,9 +60,20 @@ wss.on('connection', async function connection(ws: WebSocket, request: IncomingM
         const token = url.searchParams.get('token');
         const roomId = url.searchParams.get('roomId');
 
+        console.log(`WebSocket connection attempt with roomId: ${roomId}`);
+
         if (!token || !roomId) {
             console.log('Connection rejected: Missing token or roomId');
             ws.send(JSON.stringify({ error: "Missing token or roomId" }));
+            ws.close();
+            return;
+        }
+        
+        // Validate that roomId is a number
+        const roomIdNum = Number(roomId);
+        if (isNaN(roomIdNum)) {
+            console.log(`Connection rejected: Invalid roomId format: ${roomId}`);
+            ws.send(JSON.stringify({ error: "Invalid roomId format" }));
             ws.close();
             return;
         }
@@ -97,20 +108,30 @@ wss.on('connection', async function connection(ws: WebSocket, request: IncomingM
                 const parsedData = JSON.parse(messageString);
                 
                 if (parsedData.type === "join_room") {
-                    user.rooms.push(parsedData.roomId);
-                    console.log(`User ${user.userId} joined room ${parsedData.roomId}`);
+                    // Ensure roomId is a string
+                    const roomIdStr = String(parsedData.roomId);
+                    user.rooms.push(roomIdStr);
+                    console.log(`User ${user.userId} joined room ${roomIdStr}`);
                     ws.send(JSON.stringify({
                         type: 'system',
-                        message: `Joined room ${parsedData.roomId}`
+                        message: `Joined room ${roomIdStr}`
                     }));
                 }
                 
                 if (parsedData.type === "chat") {
                     console.log(`Saving message in room ${parsedData.roomId}`);
+                    // Ensure roomId is properly parsed as an integer
+                    const roomIdInt = parseInt(String(parsedData.roomId));
+                    if (isNaN(roomIdInt)) {
+                        console.error(`Invalid roomId format: ${parsedData.roomId}`);
+                        ws.send(JSON.stringify({ error: "Invalid roomId format" }));
+                        return;
+                    }
+                    
                     await prismaClient.chatHistory.create({
                         data: {
                             message: parsedData.message,
-                            roomId: parseInt(parsedData.roomId),
+                            roomId: roomIdInt,
                             userId: parseInt(user.userId),
                             createdAt: new Date()
                         }

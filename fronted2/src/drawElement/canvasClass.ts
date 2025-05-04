@@ -5,7 +5,6 @@ import { Tool } from "@/components/Canvas";
 import { getExistingShapes } from "./httpfxn";
 
 type Shape =  {
-    //@ts-ignore
     type: 'react',
     x: number;
     y: number;
@@ -16,6 +15,9 @@ type Shape =  {
     centreX: number;
     centerY: number;
     radius: number;
+} | {
+    type: 'pencil',
+    points: {x: number, y: number}[];
 }
 
 
@@ -87,107 +89,134 @@ export class canvasClass{
             } else if(shape.type === "circle"){
                 this.ctx.strokeStyle = 'white';
                 this.ctx.beginPath();
-                this.ctx.arc(shape.centreX , shape.centerY , Math.abs(shape.radius) , 0 , Math.PI * 2 );
+                this.ctx.arc(shape.centreX, shape.centerY, Math.abs(shape.radius), 0, Math.PI * 2);
                 this.ctx.stroke();  //render the image
                 this.ctx.closePath();
-
-                // pencil fxn 
-            } 
-
+            } else if(shape.type === "pencil" && shape.points && shape.points.length > 0) {
+                this.ctx.strokeStyle = 'white';
+                this.ctx.beginPath();
+                this.ctx.moveTo(shape.points[0].x, shape.points[0].y);
+                
+                for (let i = 1; i < shape.points.length; i++) {
+                    this.ctx.lineTo(shape.points[i].x, shape.points[i].y);
+                }
+                
+                this.ctx.stroke();
+                this.ctx.closePath();
+            }
         })
     }
 
 
 
     mouseHandler(){
-        this.canvas.addEventListener("mousedown" , (event) => {
+        // For pencil drawing
+        let currentPencilPoints: {x: number, y: number}[] = [];
+
+        this.canvas.addEventListener("mousedown", (event) => {
             const rect = this.canvas.getBoundingClientRect(); // Get canvas position
             this.clicked = true;
             this.startX = event.clientX;
             this.startY = event.clientY;
-         });
+            
+            // Start a new pencil path if pencil tool is selected
+            if (this.selectedTool === 'pencil') {
+                currentPencilPoints = [{x: event.clientX, y: event.clientY}];
+            }
+        });
 
-
-         // mouseup	->  Jab mouse chhoda jaye -> 	Drawing end
-
-        this.canvas.addEventListener("mouseup" , (event) => {
+        // mouseup -> When mouse is released -> Drawing end
+        this.canvas.addEventListener("mouseup", (event) => {
             this.clicked = false;
             // get the existing shape
             const height = event.clientY - this.startY;
             const width = event.clientX - this.startX;
-            // take the tool and write if else condition 
-         // @ts-ignore
-            const selectedTool =this.selectedTool;
-            let shape : Shape | null =  null;
-            if (selectedTool === "react") {
+            
+            let shape: Shape | null = null;
+            
+            if (this.selectedTool === "react") {
                 shape = {
-                    //@ts-ignore
                     type: "react",
                     x: this.startX,
                     y: this.startY,
                     width,
                     height
-                }
-            } else if(selectedTool === "circle"){
-                const radius = Math.max(height + width) / 2;
+                };
+            } else if (this.selectedTool === "circle") {
+                const radius = Math.max(Math.abs(height), Math.abs(width)) / 2;
                 shape = {
-                    //@ts-ignore
                     type: "circle",
                     radius: radius,
-                    centreX: this.startX + radius,
-                    centerY: this.startY  + radius ,
-                }
+                    centreX: this.startX + width/2,
+                    centerY: this.startY + height/2
+                };
+            } else if (this.selectedTool === "pencil" && currentPencilPoints.length > 0) {
+                // Add the final point
+                currentPencilPoints.push({x: event.clientX, y: event.clientY});
+                
+                shape = {
+                    type: "pencil",
+                    points: currentPencilPoints
+                };
+                
+                // Reset points for next drawing
+                currentPencilPoints = [];
             }
 
-            if(!shape){
+            if (!shape) {
                 return;
             }
 
             this.existingShapes.push(shape);
-            // use the socket to send the data to the backend
-
+            
+            // Send the shape data to the server
             this.socket.send(JSON.stringify({
                 type: 'chat',
                 message: JSON.stringify(shape),
-                roomId : this.roomId
+                roomId: this.roomId
             }));
+        });
 
-         });
-
-
-
-// it actually re render the components means the reactagnle and diff shapes 
-// mousemove -> Jab mouse move kare -> 	Live drawing
-        this.canvas.addEventListener("mousemove" , (event) => {
+        // mousemove -> When mouse moves -> Live drawing
+        this.canvas.addEventListener("mousemove", (event) => {
             if (this.clicked) {
                 const height = event.clientY - this.startY;
                 const width = event.clientX - this.startX;
+                
+                // For pencil, add the current point to the path
+                if (this.selectedTool === "pencil") {
+                    currentPencilPoints.push({x: event.clientX, y: event.clientY});
+                }
+                
                 this.clearContext();
                 this.ctx.strokeStyle = 'white';
                 
-                // make the logic for the sll the shape z
-                // @ts-ignore
-                const selectedTool =this.selectedTool;
-                if (selectedTool === "react") {
-                    //ctx.strokeRect(startX , startY , width , height) 
-                    this.ctx.strokeRect(10, 10, 100, 100);
-                    // for the circle
-                }else if(selectedTool === "circle"){
-                    const radius = Math.max( height + width) / 2;
-                    const centreX = this.startX + radius;
-                    const centerY = this.startY + radius;
+                if (this.selectedTool === "react") {
+                    // Draw rectangle preview
+                    this.ctx.strokeRect(this.startX, this.startY, width, height);
+                } else if (this.selectedTool === "circle") {
+                    // Draw circle preview
+                    const radius = Math.max(Math.abs(height), Math.abs(width)) / 2;
+                    const centreX = this.startX + width/2;
+                    const centerY = this.startY + height/2;
+                    
                     this.ctx.beginPath();
-                    this.ctx.arc(centreX , centerY , Math.abs(radius) , 0 , Math.PI * 2 )
-                    this.ctx.stroke(); // render the circle 
+                    this.ctx.arc(centreX, centerY, radius, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                    this.ctx.closePath();
+                } else if (this.selectedTool === "pencil" && currentPencilPoints.length > 0) {
+                    // Draw pencil preview
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(currentPencilPoints[0].x, currentPencilPoints[0].y);
+                    
+                    for (let i = 1; i < currentPencilPoints.length; i++) {
+                        this.ctx.lineTo(currentPencilPoints[i].x, currentPencilPoints[i].y);
+                    }
+                    
+                    this.ctx.stroke();
                     this.ctx.closePath();
                 }
-                
-                //ctx.strokeRect(startX, startY, width, height);
-
-                // console.log(event.clientX);
-                // console.log(event.clientY)
             }
         });
-
     }
 }
