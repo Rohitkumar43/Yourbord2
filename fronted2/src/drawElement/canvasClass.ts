@@ -54,6 +54,23 @@ export class canvasClass{
     setShape(tool: 'circle' | 'react' | 'pencil'){
         this.selectedTool = tool;
     }
+    
+    // Set the starting position for drawing (used for drag and drop)
+    setStartPosition(x: number, y: number) {
+        this.startX = x;
+        this.startY = y;
+        this.clicked = true;
+        
+        // Simulate a mouseup event after a short delay to complete the shape
+        setTimeout(() => {
+            const event = new MouseEvent('mouseup', {
+                clientX: x + 100, // Add some width/height to make the shape visible
+                clientY: y + 100,
+                bubbles: true
+            });
+            this.canvas.dispatchEvent(event);
+        }, 100);
+    }
 
     async init(){
         this.existingShapes =await getExistingShapes(this.roomId) 
@@ -77,23 +94,25 @@ export class canvasClass{
     // fxn for the clear the context and the shape 
     clearContext() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.fillStyle = 'black';
+        this.ctx.fillStyle = 'white';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         // use map for the exting shape 
         this.existingShapes.map((shape) => {
             if (shape.type === 'react') {
-                this.ctx.strokeStyle = 'white';
+                this.ctx.strokeStyle = 'black';
+                this.ctx.lineWidth = 2;
                 this.ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
-                this.ctx.fillRect(shape.x, shape.y, shape.width, shape.height);  
             } else if(shape.type === "circle"){
-                this.ctx.strokeStyle = 'white';
+                this.ctx.strokeStyle = 'black';
+                this.ctx.lineWidth = 2;
                 this.ctx.beginPath();
                 this.ctx.arc(shape.centreX, shape.centerY, Math.abs(shape.radius), 0, Math.PI * 2);
                 this.ctx.stroke();  //render the image
                 this.ctx.closePath();
             } else if(shape.type === "pencil" && shape.points && shape.points.length > 0) {
-                this.ctx.strokeStyle = 'white';
+                this.ctx.strokeStyle = 'black';
+                this.ctx.lineWidth = 2;
                 this.ctx.beginPath();
                 this.ctx.moveTo(shape.points[0].x, shape.points[0].y);
                 
@@ -189,7 +208,8 @@ export class canvasClass{
                 }
                 
                 this.clearContext();
-                this.ctx.strokeStyle = 'white';
+                this.ctx.strokeStyle = 'black';
+                this.ctx.lineWidth = 2;
                 
                 if (this.selectedTool === "react") {
                     // Draw rectangle preview

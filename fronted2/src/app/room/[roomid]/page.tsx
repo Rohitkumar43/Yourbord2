@@ -8,7 +8,7 @@ export default function RoomPage({params}: {
   };
 }) {
   // Ensure roomId is properly passed from the URL parameter
-  const roomId = params.roomid;  // Changed from params.roomId to params.roomidom ID from URL:", roomId  // Changed from params.roomId to params.roomidom ID from URL:", roomId);
+  const roomId =params.roomid;  // Changed from params.roomId to params.roomidom ID from URL:", roomId  // Changed from params.roomId to params.roomidom ID from URL:", roomId);
 if (!roomId) {
     return <div>Invalid Room ID</div>;
   }

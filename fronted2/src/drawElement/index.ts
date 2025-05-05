@@ -6,7 +6,6 @@ import { BACKEND_URL } from "../../config";
 
 // interface of tjhe shape
 type Shape =  {
-    //@ts-ignore
     type: 'react',
     x: number;
     y: number;
@@ -17,7 +16,10 @@ type Shape =  {
     centreX: number;
     centerY: number;
     radius: number;
-} 
+} | {
+    type: 'pencil',
+    points: {x: number, y: number}[];
+}
 
 export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , socket : WebSocket) {
     const ctx  = canvas.getContext('2d'); 
@@ -44,7 +46,7 @@ export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , s
             }
 
 
-            ctx.fillStyle = 'black';
+            ctx.fillStyle = 'white';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // take all the shape in the array
@@ -122,7 +124,8 @@ export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , s
                     const height = event.clientY - startY;
                     const width = event.clientX - startX;
                     clearContext(canvas, ctx, existingShapes);
-                    ctx.strokeStyle = 'white';
+                    ctx.strokeStyle = 'black';
+                    ctx.lineWidth = 2;
                     
                     // make the logic for the sll the shape z
                     // @ts-ignore
@@ -155,25 +158,35 @@ export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , s
 
         function clearContext(canvas: HTMLCanvasElement , ctx: CanvasRenderingContext2D , existingShapes: Shape[]) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'black';
+            ctx.fillStyle = 'white';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // use map for the exting shape 
             existingShapes.map((shape) => {
                 if (shape.type === 'react') {
-                    ctx.strokeStyle = 'white';
+                    ctx.strokeStyle = 'black';
+                    ctx.lineWidth = 2;
                     ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
-                    ctx.fillRect(shape.x, shape.y, shape.width, shape.height);  
                 } else if(shape.type === "circle"){
-                    ctx.strokeStyle = 'white';
+                    ctx.strokeStyle = 'black';
+                    ctx.lineWidth = 2;
                     ctx.beginPath();
-                    ctx.arc(shape.centreX , shape.centerY , shape.radius , 0 , Math.PI * 2 );
+                    ctx.arc(shape.centreX, shape.centerY, Math.abs(shape.radius), 0, Math.PI * 2);
                     ctx.stroke();  //render the image
                     ctx.closePath();
-
-                    // pencil fxn 
-                } 
-
+                } else if(shape.type === "pencil" && shape.points && shape.points.length > 0) {
+                    ctx.strokeStyle = 'black';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(shape.points[0].x, shape.points[0].y);
+                    
+                    for (let i = 1; i < shape.points.length; i++) {
+                        ctx.lineTo(shape.points[i].x, shape.points[i].y);
+                    }
+                    
+                    ctx.stroke();
+                    ctx.closePath();
+                }
             })
         }
 
@@ -185,21 +198,32 @@ export async function  drawintial(canvas: HTMLCanvasElement , roomId: string , s
         // the shape we will get which is draw pahle se 
 export async function getExistingShapes(roomId: string) {
     try {
-        const response = await axios.get(`${BACKEND_URL}/chats/${roomId}`);
+        console.log(`Fetching existing shapes for room ${roomId}`);
+        const response = await axios.get(`${BACKEND_URL}/room/id/slug/${roomId}`);
         const messages = response.data.messages;
 
-        if(!messages) return [];
+        if(!messages || !messages.length) {
+            console.log('No existing shapes found');
+            return [];
+        }
 
+        console.log(`Found ${messages.length} messages with shapes`);
+        
         // Map over the data and return the shapes
         const shapes = messages.map((x : {message: string}) => {
-            const messageData = JSON.parse(x.message);
-            return messageData.shape;
-        });
-
+            try {
+                return JSON.parse(x.message);
+            } catch (e) {
+                console.error('Error parsing message:', e);
+                return null;
+            }
+        }).filter(Boolean); // Remove any null values
+        
+        console.log(`Successfully parsed ${shapes.length} shapes`);
         return shapes;
         
     } catch (error) {
-        console.log('Error fetching existing shapes:', error);
+        console.error('Error fetching existing shapes:', error);
         return [];
     }
 }
