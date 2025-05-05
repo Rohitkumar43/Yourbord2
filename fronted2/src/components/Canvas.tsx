@@ -50,7 +50,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { drawintial } from '../drawElement';
 import { IconButton } from './IconButton';
-import { Circle, Pencil, RectangleHorizontal } from 'lucide-react';
+import { Circle, Pencil, RectangleHorizontal, Eraser } from 'lucide-react';
 import { canvasClass } from '@/drawElement/canvasClass';
 
 interface CanvasProps {
@@ -59,7 +59,7 @@ interface CanvasProps {
 }
 
 // enum - type of the tool 
-export type Tool = "pencil" | "circle" | "react";
+export type Tool = "pencil" | "circle" | "react" | "eraser";
 
 export function Canvas({ roomId, socket }: CanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -230,7 +230,7 @@ export function UppertoolBox({
                 </div>
             </div>
             
-            <div className='grid grid-cols-3 gap-2'>
+            <div className='grid grid-cols-4 gap-2'>
                 <div 
                     className={`p-2 rounded-md flex flex-col items-center justify-center transition-all ${selectedTool === "pencil" ? 'bg-blue-100 shadow-inner' : 'hover:bg-gray-100'}`}
                     onClick={() => setIsselected("pencil")}
@@ -259,6 +259,16 @@ export function UppertoolBox({
                 >
                     <Circle className="h-6 w-6 text-gray-700" />
                     <span className="text-xs mt-1 text-gray-600">Circle</span>
+                </div>
+
+                <div 
+                    className={`p-2 rounded-md flex flex-col items-center justify-center transition-all ${selectedTool === "eraser" ? 'bg-blue-100 shadow-inner' : 'hover:bg-gray-100'}`}
+                    onClick={() => setIsselected("eraser")}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, "eraser")}
+                >
+                    <Eraser className="h-6 w-6 text-gray-700" />
+                    <span className="text-xs mt-1 text-gray-600">Eraser</span>
                 </div>
             </div>
             
